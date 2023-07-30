@@ -1,0 +1,56 @@
+From 18d53192c8a0670768f1fcaf3108e63c1fbfb5d0 Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Sat, 29 Jul 2023 17:10:42 -0700
+Subject: [PATCH] Include stdexcept
+
+Fix this error on Fedora/rawhide
+pytorch/c10/util/Registry.h:89:22: error: no member named 'runtime_error' in namespace 'std'
+          throw std::runtime_error(err_msg);
+                ~~~~~^
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ c10/util/Registry.h                 | 1 +
+ torch/csrc/jit/runtime/logging.cpp  | 1 +
+ torch/csrc/lazy/core/multi_wait.cpp | 1 +
+ 3 files changed, 3 insertions(+)
+
+diff --git a/c10/util/Registry.h b/c10/util/Registry.h
+index d75e2b9590c..991a48508a7 100644
+--- a/c10/util/Registry.h
++++ b/c10/util/Registry.h
+@@ -16,6 +16,7 @@
+ #include <memory>
+ #include <mutex>
+ #include <string>
++#include <stdexcept>
+ #include <unordered_map>
+ #include <vector>
+ 
+diff --git a/torch/csrc/jit/runtime/logging.cpp b/torch/csrc/jit/runtime/logging.cpp
+index 66712990368..b1c540109c7 100644
+--- a/torch/csrc/jit/runtime/logging.cpp
++++ b/torch/csrc/jit/runtime/logging.cpp
+@@ -2,6 +2,7 @@
+ 
+ #include <atomic>
+ #include <mutex>
++#include <stdexcept>
+ #include <unordered_map>
+ 
+ namespace torch {
+diff --git a/torch/csrc/lazy/core/multi_wait.cpp b/torch/csrc/lazy/core/multi_wait.cpp
+index 6b9933518e0..25244209a3d 100644
+--- a/torch/csrc/lazy/core/multi_wait.cpp
++++ b/torch/csrc/lazy/core/multi_wait.cpp
+@@ -2,6 +2,7 @@
+ 
+ #include <chrono>
+ #include <exception>
++#include <stdexcept>
+ 
+ namespace torch {
+ namespace lazy {
+-- 
+2.41.0
+

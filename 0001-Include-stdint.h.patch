@@ -1,0 +1,29 @@
+From 9ffdb19277a3325281e6a405802fb1cd0e5ba664 Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Sat, 29 Jul 2023 17:42:25 -0700
+Subject: [PATCH] Include stdint.h
+
+Fixes this error on Fedora/rawhide
+pytorch/torch/csrc/jit/passes/quantization/quantization_type.h:9:18: error: unknown type name 'uint8_t'
+enum QuantType : uint8_t { DYNAMIC = 0, STATIC };
+                 ^
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ torch/csrc/jit/passes/quantization/quantization_type.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/torch/csrc/jit/passes/quantization/quantization_type.h b/torch/csrc/jit/passes/quantization/quantization_type.h
+index ea5ca10b15a..da1c74724d3 100644
+--- a/torch/csrc/jit/passes/quantization/quantization_type.h
++++ b/torch/csrc/jit/passes/quantization/quantization_type.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ #include <ostream>
++#include <stdint.h>
+ 
+ namespace torch {
+ namespace jit {
+-- 
+2.41.0
+
