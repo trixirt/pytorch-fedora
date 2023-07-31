@@ -12,12 +12,17 @@ Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
 
+%if 0%{?fedora}
 BuildRequires:  blas-static
+%endif
 BuildRequires:  clang-devel
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
 BuildRequires:  make
+%if 0%{?rhel}
+BuildRequires:  openblas-static
+%endif
 BuildRequires:  protobuf-devel
 BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
