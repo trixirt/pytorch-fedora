@@ -1,11 +1,12 @@
 %global debug_package %{nil}
+%global _clang_lto_cflags -flto=thin
 %global toolchain clang
 
 Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
@@ -32,7 +33,6 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
 BuildRequires:  python3-typing-extensions
-
 # TBD : add more
 
 %description
@@ -56,6 +56,10 @@ for %{name}.
 %autosetup -p1 -n %{name}-v%{version}
 
 %build
+%if 0%{?rhel}
+ulimit -n 2048
+%endif
+
 %cmake \
         -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
         -DBUILD_CUSTOM_PROTOBUF=OFF \
@@ -89,9 +93,11 @@ for %{name}.
 /usr/lib/libtorch.so
 /usr/lib/libtorch_cpu.so
 /usr/lib/libtorch_global_deps.so
+%ifarch x86_64
 %{_libdir}/libCaffe2_perfkernels_avx.a
 %{_libdir}/libCaffe2_perfkernels_avx2.a
 %{_libdir}/libCaffe2_perfkernels_avx512.a
+%endif
 
 # FIXME: coming from third_party 
 # cpuinfo
@@ -143,6 +149,11 @@ for %{name}.
 %{_includedir}/sleef.h
 
 %changelog
+* Thu Aug 03 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-4
+- Conditionalize file list to fix aarch64 builds
+- Set _clang_lto_cflags to drastically improve older EL9 build times.
+- Increase open files to work around older EL9 ld.
+
 * Thu Aug 3 2023 Tom Rix <trix@redhat.com> - 2.0.1-3
 - Add condition with python
 
