@@ -14,6 +14,7 @@ Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
 Patch2:         fix-cpuinfo-implicit-syscall.patch
 
+%bcond_without cpuinfo
 %bcond_with python
 
 %if 0%{?fedora}
@@ -21,6 +22,9 @@ BuildRequires:  blas-static
 %endif
 BuildRequires:  clang-devel
 BuildRequires:  cmake
+%if %{with cpuinfo}
+BuildRequires:  cpuinfo-devel
+%endif
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
 BuildRequires:  make
@@ -68,7 +72,8 @@ ulimit -n 2048
         -DBUILD_PYTHON=OFF \
 %endif
         -DBUILD_SHARED_LIBS=ON \
-	-DONNX_ML=OFF \
+        -DONNX_ML=OFF \
+        -DUSE_CUDA=OFF \
         -DUSE_FBGEMM=OFF \
         -DUSE_KINETO=OFF \
         -DUSE_MKLDNN=OFF \
@@ -76,6 +81,9 @@ ulimit -n 2048
 	-DUSE_TENSORPIPE=OFF \
         -DBUILD_CUSTOM_PROTOBUF=OFF \
         -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
+%if %{with cpuinfo}
+        -DUSE_SYSTEM_CPUINFO=ON \
+%endif
         -DUSE_SYSTEM_PYBIND11=ON \
 	-DUSE_XNNPACK=OFF
 
@@ -102,10 +110,15 @@ ulimit -n 2048
 
 # FIXME: coming from third_party 
 # cpuinfo
-%{_libdir}/libclog.a
+%if %{without cpuinfo}
 %{_libdir}/libcpuinfo.a
 %{_libdir}/pkgconfig/libcpuinfo.pc
 %{_datadir}/cpuinfo
+%{_includedir}/cpuinfo.h
+%endif
+
+%{_libdir}/libclog.a
+
 
 %ifarch x86_64 aarch64
 # pthreadpool
@@ -129,7 +142,6 @@ ulimit -n 2048
 # FIXME: coming from third_party
 # cpuinfo
 %{_includedir}/clog.h
-%{_includedir}/cpuinfo.h
 
 # FP16
 %{_includedir}/fp16.h
