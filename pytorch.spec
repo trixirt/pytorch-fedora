@@ -5,12 +5,14 @@ Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
+
+%bcond_with python
 
 %if 0%{?fedora}
 BuildRequires:  blas-static
@@ -24,6 +26,9 @@ BuildRequires:  make
 BuildRequires:  openblas-static
 %endif
 BuildRequires:  protobuf-devel
+%if %{with python}
+BuildRequires:  python3-devel
+%endif
 BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
 BuildRequires:  python3-typing-extensions
@@ -54,7 +59,9 @@ for %{name}.
 %cmake \
         -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
         -DBUILD_CUSTOM_PROTOBUF=OFF \
-	-DBUILD_PYTHON=OFF \
+%if %{without python}
+        -DBUILD_PYTHON=OFF \
+%endif
         -DBUILD_SHARED_LIBS=ON \
 	-DONNX_ML=OFF \
         -DUSE_FBGEMM=OFF \
@@ -136,6 +143,9 @@ for %{name}.
 %{_includedir}/sleef.h
 
 %changelog
+* Thu Aug 3 2023 Tom Rix <trix@redhat.com> - 2.0.1-3
+- Add condition with python
+
 * Mon Jul 31 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-2
 - Improvements to get building in mock
 
