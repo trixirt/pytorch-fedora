@@ -5,13 +5,14 @@
 Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
-Version:        2.0.1
-Release:        4%{?dist}
+Version:        2.0.1.gitf81f9093
+Release:        5%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
+Patch2:         fix-cpuinfo-implicit-syscall.patch
 
 %bcond_with python
 
@@ -106,12 +107,14 @@ ulimit -n 2048
 %{_libdir}/pkgconfig/libcpuinfo.pc
 %{_datadir}/cpuinfo
 
+%ifarch x86_64 aarch64
 # pthreadpool
 %{_libdir}/libpthreadpool.a
 
 # QNNPACK
 %{_libdir}/libpytorch_qnnpack.a
 %{_libdir}/libqnnpack.a
+%endif
 
 # sleef
 %{_libdir}/libsleef.a
@@ -132,23 +135,31 @@ ulimit -n 2048
 %{_includedir}/fp16.h
 %{_includedir}/fp16
 
+%ifarch x86_64 aarch64
 # FXdiv
 %{_includedir}/fxdiv.h
+%endif
 
 # psmid
 %{_includedir}/psimd.h
 
+%ifarch x86_64 aarch64
 # pthreadpool
 %{_includedir}/pthreadpool.h
 
 # QNNPACK
 %{_includedir}/qnnpack.h
 %{_includedir}/qnnpack_func.h
+%endif
 
 # sleef
 %{_includedir}/sleef.h
 
 %changelog
+* Fri Aug 04 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-5
+- Adjust architecture specific packaging
+- Fix cpuinfo build failures with clang 16 on s390x and ppc64le
+
 * Thu Aug 03 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-4
 - Conditionalize file list to fix aarch64 builds
 - Set _clang_lto_cflags to drastically improve older EL9 build times.
