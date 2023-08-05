@@ -5,14 +5,15 @@
 Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
-Version:        2.0.1.gitf81f9093
-Release:        5%{?dist}
+# Version:        2.0.1.gitf81f9093 - broken download
+Version:        2.0.1
+Release:        6%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
-Patch2:         fix-cpuinfo-implicit-syscall.patch
+# Patch2:         fix-cpuinfo-implicit-syscall.patch - missing from commit
 
 %bcond_without cpuinfo
 %bcond_with python
@@ -38,7 +39,7 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
 BuildRequires:  python3-typing-extensions
-# TBD : add more
+BuildRequires:  sleef-devel
 
 %description
 PyTorch is a Python package that provides two high-level features:
@@ -85,6 +86,7 @@ ulimit -n 2048
         -DUSE_SYSTEM_CPUINFO=ON \
 %endif
         -DUSE_SYSTEM_PYBIND11=ON \
+        -DUSE_SYSTEM_SLEEF=ON \
 	-DUSE_XNNPACK=OFF
 
 %cmake_build
@@ -129,10 +131,6 @@ ulimit -n 2048
 %{_libdir}/libqnnpack.a
 %endif
 
-# sleef
-%{_libdir}/libsleef.a
-%{_libdir}/pkgconfig/sleef.pc
-
 %files devel
 %{_includedir}/ATen
 %{_includedir}/c10
@@ -164,10 +162,10 @@ ulimit -n 2048
 %{_includedir}/qnnpack_func.h
 %endif
 
-# sleef
-%{_includedir}/sleef.h
-
 %changelog
+* Sat Aug 05 2023 Tom Rix <trix@redhat.com> - 2.0.1-6
+- Use cpuinfo, sleef
+
 * Fri Aug 04 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-5
 - Adjust architecture specific packaging
 - Fix cpuinfo build failures with clang 16 on s390x and ppc64le
