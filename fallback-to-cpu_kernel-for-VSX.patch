@@ -1,0 +1,75 @@
+diff --git a/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int16_vsx.h b/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int16_vsx.h
+index 7c300c8087cff2..a71f50fc7aaa30 100644
+--- a/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int16_vsx.h
++++ b/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int16_vsx.h
+@@ -334,6 +334,20 @@ class Vectorized<int16_t> {
+   DEFINE_MEMBER_OP(operator^, int16_t, vec_xor)
+ };
+ 
++template <>
++Vectorized<int16_t> inline operator<<(const Vectorized<int16_t>& a, const Vectorized<int16_t>& b) {
++               vuint16 shift_vec0 = reinterpret_cast<vuint16>(b.vec0());
++               vuint16 shift_vec1 = reinterpret_cast<vuint16>(b.vec1());
++         return Vectorized<int16_t>{vec_sl(a.vec0(), shift_vec0), vec_sl(a.vec1(), shift_vec1)};
++}
++
++template <>
++Vectorized<int16_t> inline operator>>(const Vectorized<int16_t>& a, const Vectorized<int16_t>& b) {
++               vuint16 shift_vec0 = reinterpret_cast<vuint16>(b.vec0());
++               vuint16 shift_vec1 = reinterpret_cast<vuint16>(b.vec1()) ;
++         return Vectorized<int16_t>{vec_sr(a.vec0(), shift_vec0), vec_sr(a.vec1(), shift_vec1)};
++}
++
+ template <>
+ Vectorized<int16_t> inline maximum(
+     const Vectorized<int16_t>& a,
+diff --git a/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int32_vsx.h b/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int32_vsx.h
+index c98ab6215e6206..1b6a82df39b530 100644
+--- a/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int32_vsx.h
++++ b/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int32_vsx.h
+@@ -265,6 +265,20 @@ class Vectorized<int32_t> {
+   DEFINE_MEMBER_OP(operator^, int32_t, vec_xor)
+ };
+ 
++template <>
++Vectorized<int32_t> inline operator<<(const Vectorized<int32_t>& a, const Vectorized<int32_t>& b) {
++                vuint32 shift_vec0 = reinterpret_cast<vuint32>(b.vec0());
++                vuint32 shift_vec1 = reinterpret_cast<vuint32>(b.vec1()) ;
++          return Vectorized<int32_t>{vec_sl(a.vec0(), shift_vec0), vec_sl(a.vec1(), shift_vec1)};
++}
++
++template <>
++Vectorized<int32_t> inline operator>>(const Vectorized<int32_t>& a, const Vectorized<int32_t>& b) {
++                vuint32 shift_vec0 = reinterpret_cast<vuint32>(b.vec0());
++                vuint32 shift_vec1 = reinterpret_cast<vuint32>(b.vec1()) ;
++          return Vectorized<int32_t>{vec_sr(a.vec0(), shift_vec0), vec_sr(a.vec1(), shift_vec1)};
++}
++
+ template <>
+ Vectorized<int32_t> inline maximum(
+     const Vectorized<int32_t>& a,
+diff --git a/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int64_vsx.h b/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int64_vsx.h
+index a4171026a2b99f..a7a376ee16ec54 100644
+--- a/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int64_vsx.h
++++ b/aten/src/ATen/cpu/vec/vec256/vsx/vec256_int64_vsx.h
+@@ -217,6 +217,20 @@ class Vectorized<int64_t> {
+   DEFINE_MEMBER_OP(operator^, int64_t, vec_xor)
+ };
+ 
++template <>
++Vectorized<int64_t> inline operator<<(const Vectorized<int64_t>& a, const Vectorized<int64_t>& b) {
++                vuint64 shift_vec0 = reinterpret_cast<vuint64>(b.vec0());
++                vuint64 shift_vec1 = reinterpret_cast<vuint64>(b.vec1()) ;
++          return Vectorized<int64_t>{vec_sl(a.vec0(), shift_vec0), vec_sl(a.vec1(), shift_vec1)};
++}
++
++template <>
++Vectorized<int64_t> inline operator>>(const Vectorized<int64_t>& a, const Vectorized<int64_t>& b) {
++                vuint64 shift_vec0 = reinterpret_cast<vuint64>(b.vec0());
++                vuint64 shift_vec1 = reinterpret_cast<vuint64>(b.vec1()) ;
++          return Vectorized<int64_t>{vec_sr(a.vec0(), shift_vec0), vec_sr(a.vec1(), shift_vec1)};
++}
++
+ template <>
+ Vectorized<int64_t> inline maximum(
+     const Vectorized<int64_t>& a,
