@@ -1,0 +1,15 @@
+commit 9319defe0ec044dddb3ecec80a798935716807fb
+Author: Jason Montleon <jmontleo@redhat.com>
+Date:   Fri Aug 4 11:06:20 2023 -0400
+
+    Fix implicit syscall on ppc64le and aarch64
+
+diff --git a/third_party/cpuinfo/src/api.c b/third_party/cpuinfo/src/api.c
+index f91b421..a560938 100644
+--- a/third_party/cpuinfo/src/api.c
++++ b/third_party/cpuinfo/src/api.c
+@@ -1,3 +1,4 @@
++#define _GNU_SOURCE
+ #include <stdbool.h>
+ #include <stddef.h>
+ 

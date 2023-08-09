@@ -1,22 +1,29 @@
 %global debug_package %{nil}
-%global _clang_lto_cflags -flto=thin
+
+%bcond_with python
+%bcond_with toolchain_clang
+%bcond_without cpuinfo
+
+%if %{with toolchain_clang}
 %global toolchain clang
+%global _clang_lto_cflags -flto=thin
+%else
+%global toolchain gcc
+%endif
 
 Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
-# Version:        2.0.1.gitf81f9093 - broken download
 Version:        2.0.1
-Release:        6%{?dist}
+Release:        7%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
-# Patch2:         fix-cpuinfo-implicit-syscall.patch - missing from commit
-
-%bcond_without cpuinfo
-%bcond_with python
+Patch2:         fix-cpuinfo-implicit-syscall.patch
+Patch3:         do-not-force-Werror-on-Pooling.patch
+Patch4:         fallback-to-cpu_kernel-for-VSX.patch
 
 %if 0%{?fedora}
 BuildRequires:  blas-static
@@ -119,8 +126,13 @@ ulimit -n 2048
 %{_includedir}/cpuinfo.h
 %endif
 
+%if %{without cpuinfo}
 %{_libdir}/libclog.a
-
+%else
+%ifarch x86_64 aarch64
+%{_libdir}/libclog.a
+%endif
+%endif
 
 %ifarch x86_64 aarch64
 # pthreadpool
@@ -137,9 +149,13 @@ ulimit -n 2048
 %{_includedir}/torch
 %{_includedir}/caffe2
 
-# FIXME: coming from third_party
-# cpuinfo
+%if %{without cpuinfo}
+%{_libdir}/libclog.a
+%else
+%ifarch x86_64 aarch64
 %{_includedir}/clog.h
+%endif
+%endif
 
 # FP16
 %{_includedir}/fp16.h
@@ -163,6 +179,10 @@ ulimit -n 2048
 %endif
 
 %changelog
+* Sat Aug 05 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-7
+- Fix ppc64le builds
+- Add option to build with gcc or clang, default to gcc for sake of ppc64le
+
 * Sat Aug 05 2023 Tom Rix <trix@redhat.com> - 2.0.1-6
 - Use cpuinfo, sleef
 
