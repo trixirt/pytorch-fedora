@@ -1,6 +1,7 @@
 %global debug_package %{nil}
 
 %bcond_with python
+%bcond_with rocm
 %bcond_with toolchain_clang
 %bcond_without cpuinfo
 
@@ -15,7 +16,7 @@ Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        7%{?dist}
+Release:        8%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
@@ -73,6 +74,11 @@ for %{name}.
 ulimit -n 2048
 %endif
 
+%if %{with rocm}
+# Radeon RX 7600
+export PYTORCH_ROCM_ARCH=gfx1102
+%endif
+
 %cmake \
         -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
         -DBUILD_CUSTOM_PROTOBUF=OFF \
@@ -80,20 +86,22 @@ ulimit -n 2048
         -DBUILD_PYTHON=OFF \
 %endif
         -DBUILD_SHARED_LIBS=ON \
+        -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
         -DONNX_ML=OFF \
         -DUSE_CUDA=OFF \
         -DUSE_FBGEMM=OFF \
         -DUSE_KINETO=OFF \
         -DUSE_MKLDNN=OFF \
 	-DUSE_NNPACK=OFF \
-	-DUSE_TENSORPIPE=OFF \
-        -DBUILD_CUSTOM_PROTOBUF=OFF \
-        -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
+%if %{with rocm}
+        -DUSE_ROCM=ON \
+%endif
 %if %{with cpuinfo}
         -DUSE_SYSTEM_CPUINFO=ON \
 %endif
         -DUSE_SYSTEM_PYBIND11=ON \
         -DUSE_SYSTEM_SLEEF=ON \
+	-DUSE_TENSORPIPE=OFF \
 	-DUSE_XNNPACK=OFF
 
 %cmake_build
@@ -150,7 +158,7 @@ ulimit -n 2048
 %{_includedir}/caffe2
 
 %if %{without cpuinfo}
-%{_libdir}/libclog.a
+%{_includedir}/clog.h
 %else
 %ifarch x86_64 aarch64
 %{_includedir}/clog.h
@@ -179,6 +187,10 @@ ulimit -n 2048
 %endif
 
 %changelog
+* Wed Aug 9 2023 Tom Rix <trix@redhat.com> - 2.0.1-8
+- Fix clod.h error
+- Stub in rocm to work out integration
+
 * Sat Aug 05 2023 Jason Montleon <jmontleo@redhat.com> - 2.0.1-7
 - Fix ppc64le builds
 - Add option to build with gcc or clang, default to gcc for sake of ppc64le
