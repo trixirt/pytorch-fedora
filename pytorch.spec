@@ -16,7 +16,7 @@ Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        8%{?dist}
+Release:        9%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
@@ -25,6 +25,7 @@ Patch1:         0001-Include-stdint.h.patch
 Patch2:         fix-cpuinfo-implicit-syscall.patch
 Patch3:         do-not-force-Werror-on-Pooling.patch
 Patch4:         fallback-to-cpu_kernel-for-VSX.patch
+%bcond_with psimd
 
 %if 0%{?fedora}
 BuildRequires:  blas-static
@@ -41,6 +42,9 @@ BuildRequires:  make
 BuildRequires:  openblas-static
 %endif
 BuildRequires:  protobuf-devel
+%if %{with psimd}
+BuildRequires:  psimd-devel
+%endif
 %if %{with python}
 BuildRequires:  python3-devel
 %endif
@@ -95,9 +99,14 @@ export PYTORCH_ROCM_ARCH=gfx1102
 	-DUSE_NNPACK=OFF \
 %if %{with rocm}
         -DUSE_ROCM=ON \
+%else
+        -DUSE_ROCM=OFF \
 %endif
 %if %{with cpuinfo}
         -DUSE_SYSTEM_CPUINFO=ON \
+%endif
+%if %{with psimd}
+        -DUSE_SYSTEM_PSIMD=ON \
 %endif
         -DUSE_SYSTEM_PYBIND11=ON \
         -DUSE_SYSTEM_SLEEF=ON \
@@ -174,8 +183,10 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_includedir}/fxdiv.h
 %endif
 
+%if %{without psimd}
 # psmid
 %{_includedir}/psimd.h
+%endif
 
 %ifarch x86_64 aarch64
 # pthreadpool
@@ -187,6 +198,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 %changelog
+* Thu Aug 17 2023 Tom Rix <trix@redhat.com> - 2.0.1-9
+- Try rawhide bound psimd package
+
 * Wed Aug 9 2023 Tom Rix <trix@redhat.com> - 2.0.1-8
 - Fix clod.h error
 - Stub in rocm to work out integration
