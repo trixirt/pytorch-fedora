@@ -1,9 +1,11 @@
 %global debug_package %{nil}
 
+%bcond_with fp16
 %bcond_with python
 %bcond_with rocm
 %bcond_with toolchain_clang
 %bcond_without cpuinfo
+%bcond_without psimd
 
 %if %{with toolchain_clang}
 %global toolchain clang
@@ -16,7 +18,7 @@ Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        9%{?dist}
+Release:        10%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
@@ -25,7 +27,6 @@ Patch1:         0001-Include-stdint.h.patch
 Patch2:         fix-cpuinfo-implicit-syscall.patch
 Patch3:         do-not-force-Werror-on-Pooling.patch
 Patch4:         fallback-to-cpu_kernel-for-VSX.patch
-%bcond_with psimd
 
 %if 0%{?fedora}
 BuildRequires:  blas-static
@@ -34,6 +35,9 @@ BuildRequires:  clang-devel
 BuildRequires:  cmake
 %if %{with cpuinfo}
 BuildRequires:  cpuinfo-devel
+%endif
+%if %{with fp16}
+BuildRequires:  FP16-devel
 %endif
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
@@ -46,7 +50,8 @@ BuildRequires:  protobuf-devel
 BuildRequires:  psimd-devel
 %endif
 %if %{with python}
-BuildRequires:  python3-devel
+BuildRequires:  python3.10-devel
+BuildRequires:  python3-setuptools
 %endif
 BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
@@ -104,6 +109,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 %if %{with cpuinfo}
         -DUSE_SYSTEM_CPUINFO=ON \
+%endif
+%if %{with fp16}
+        -DUSE_SYSTEM_FP16=ON \
 %endif
 %if %{with psimd}
         -DUSE_SYSTEM_PSIMD=ON \
@@ -175,8 +183,13 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 # FP16
+%if %{without fp16}
 %{_includedir}/fp16.h
 %{_includedir}/fp16
+%else
+%exclude %{_includedir}/fp16.h
+%exclude %{_includedir}/fp16
+%endif
 
 %ifarch x86_64 aarch64
 # FXdiv
@@ -186,6 +199,8 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %if %{without psimd}
 # psmid
 %{_includedir}/psimd.h
+%else
+%exclude %{_includedir}/psimd.h
 %endif
 
 %ifarch x86_64 aarch64
@@ -198,6 +213,10 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 %changelog
+* Sat Sep 09 2023 Tom Rix <trix@redhat.com> - 2.0.1-10
+- Try rawhide bound fp16 package
+- Use psimd package
+
 * Thu Aug 17 2023 Tom Rix <trix@redhat.com> - 2.0.1-9
 - Try rawhide bound psimd package
 
