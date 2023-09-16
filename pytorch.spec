@@ -1,6 +1,8 @@
 %global debug_package %{nil}
 
+%bcond_with check
 %bcond_with fxdiv
+%bcond_with pthreadpool
 %bcond_with python
 %bcond_with rocm
 %bcond_with toolchain_clang
@@ -53,6 +55,9 @@ BuildRequires:  protobuf-devel
 %if %{with psimd}
 BuildRequires:  psimd-devel
 %endif
+%if %{with pthreadpool}
+BuildRequires:  pthreadpool-devel
+%endif
 %if %{with python}
 BuildRequires:  python3.10-devel
 BuildRequires:  python3-setuptools
@@ -99,6 +104,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
         -DBUILD_PYTHON=OFF \
 %endif
         -DBUILD_SHARED_LIBS=ON \
+%if %{with check}
+	-DBUILD_TEST=ON \
+%endif
         -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
         -DONNX_ML=OFF \
         -DUSE_CUDA=OFF \
@@ -123,12 +131,20 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %if %{with psimd}
         -DUSE_SYSTEM_PSIMD=ON \
 %endif
+%if %{with pthreadpool}
+        -DUSE_SYSTEM_PTHREADPOOL=ON \
+%endif
         -DUSE_SYSTEM_PYBIND11=ON \
         -DUSE_SYSTEM_SLEEF=ON \
 	-DUSE_TENSORPIPE=OFF \
 	-DUSE_XNNPACK=OFF
 
 %cmake_build
+
+%if %{with check}
+%check
+%ctest
+%endif
 
 %install
 %cmake_install
@@ -167,8 +183,11 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 %ifarch x86_64 aarch64
+%if %{without pthreadpool}
 # pthreadpool
 %{_libdir}/libpthreadpool.a
+%{_includedir}/pthreadpool.h
+%endif
 
 # QNNPACK
 %{_libdir}/libpytorch_qnnpack.a
@@ -215,8 +234,6 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 %ifarch x86_64 aarch64
-# pthreadpool
-%{_includedir}/pthreadpool.h
 
 # QNNPACK
 %{_includedir}/qnnpack.h
@@ -226,7 +243,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %changelog
 * Sat Sep 16 2023 Tom Rix <trix@redhat.com> - 2.0.1-11
 - Try rawhide bound fxdiv package
+- Try rawhide bound pthreadpool package
 - Use fp16 package
+- Add a check option
 
 * Sat Sep 09 2023 Tom Rix <trix@redhat.com> - 2.0.1-10
 - Try rawhide bound fp16 package
