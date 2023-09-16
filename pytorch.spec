@@ -1,10 +1,11 @@
 %global debug_package %{nil}
 
-%bcond_with fp16
+%bcond_with fxdiv
 %bcond_with python
 %bcond_with rocm
 %bcond_with toolchain_clang
 %bcond_without cpuinfo
+%bcond_without fp16
 %bcond_without psimd
 
 %if %{with toolchain_clang}
@@ -18,7 +19,7 @@ Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        10%{?dist}
+Release:        11%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
@@ -38,6 +39,9 @@ BuildRequires:  cpuinfo-devel
 %endif
 %if %{with fp16}
 BuildRequires:  FP16-devel
+%endif
+%if %{with fxdiv}
+BuildRequires:  FXdiv-devel
 %endif
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
@@ -112,6 +116,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 %if %{with fp16}
         -DUSE_SYSTEM_FP16=ON \
+%endif
+%if %{with fxdiv}
+        -DUSE_SYSTEM_FXDIV=ON \
 %endif
 %if %{with psimd}
         -DUSE_SYSTEM_PSIMD=ON \
@@ -193,7 +200,11 @@ export PYTORCH_ROCM_ARCH=gfx1102
 
 %ifarch x86_64 aarch64
 # FXdiv
+%if %{without fxdiv}
 %{_includedir}/fxdiv.h
+%else
+%exclude %{_includedir}/fxdiv.h
+%endif
 %endif
 
 %if %{without psimd}
@@ -213,6 +224,10 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 %changelog
+* Sat Sep 16 2023 Tom Rix <trix@redhat.com> - 2.0.1-11
+- Try rawhide bound fxdiv package
+- Use fp16 package
+
 * Sat Sep 09 2023 Tom Rix <trix@redhat.com> - 2.0.1-10
 - Try rawhide bound fp16 package
 - Use psimd package
