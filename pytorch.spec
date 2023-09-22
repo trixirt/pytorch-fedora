@@ -6,9 +6,6 @@
 %bcond_with python
 %bcond_with rocm
 %bcond_with toolchain_clang
-%bcond_without cpuinfo
-%bcond_without fp16
-%bcond_without psimd
 
 %if %{with toolchain_clang}
 %global toolchain clang
@@ -21,7 +18,7 @@ Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
 Version:        2.0.1
-Release:        11%{?dist}
+Release:        12%{?dist}
 
 URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
@@ -33,28 +30,21 @@ Patch4:         fallback-to-cpu_kernel-for-VSX.patch
 
 %if 0%{?fedora}
 BuildRequires:  blas-static
+%else
+BuildRequires:  openblas-static
 %endif
 BuildRequires:  clang-devel
 BuildRequires:  cmake
-%if %{with cpuinfo}
 BuildRequires:  cpuinfo-devel
-%endif
-%if %{with fp16}
 BuildRequires:  FP16-devel
-%endif
 %if %{with fxdiv}
 BuildRequires:  FXdiv-devel
 %endif
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
 BuildRequires:  make
-%if 0%{?rhel}
-BuildRequires:  openblas-static
-%endif
 BuildRequires:  protobuf-devel
-%if %{with psimd}
 BuildRequires:  psimd-devel
-%endif
 %if %{with pthreadpool}
 BuildRequires:  pthreadpool-devel
 %endif
@@ -108,6 +98,7 @@ export PYTORCH_ROCM_ARCH=gfx1102
 	-DBUILD_TEST=ON \
 %endif
         -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
+        -DHAVE_SOVERSION=ON \
         -DONNX_ML=OFF \
         -DUSE_CUDA=OFF \
         -DUSE_FBGEMM=OFF \
@@ -119,18 +110,12 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %else
         -DUSE_ROCM=OFF \
 %endif
-%if %{with cpuinfo}
         -DUSE_SYSTEM_CPUINFO=ON \
-%endif
-%if %{with fp16}
         -DUSE_SYSTEM_FP16=ON \
-%endif
 %if %{with fxdiv}
         -DUSE_SYSTEM_FXDIV=ON \
 %endif
-%if %{with psimd}
         -DUSE_SYSTEM_PSIMD=ON \
-%endif
 %if %{with pthreadpool}
         -DUSE_SYSTEM_PTHREADPOOL=ON \
 %endif
@@ -155,43 +140,14 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_datadir}/cmake/Caffe2
 %{_datadir}/cmake/Torch
 
-/usr/lib/libc10.so
-/usr/lib/libtorch.so
-/usr/lib/libtorch_cpu.so
-/usr/lib/libtorch_global_deps.so
+/usr/lib/libc10.so.*
+/usr/lib/libtorch.so.*
+/usr/lib/libtorch_cpu.so.*
+/usr/lib/libtorch_global_deps.so.*
 %ifarch x86_64
 %{_libdir}/libCaffe2_perfkernels_avx.a
 %{_libdir}/libCaffe2_perfkernels_avx2.a
 %{_libdir}/libCaffe2_perfkernels_avx512.a
-%endif
-
-# FIXME: coming from third_party 
-# cpuinfo
-%if %{without cpuinfo}
-%{_libdir}/libcpuinfo.a
-%{_libdir}/pkgconfig/libcpuinfo.pc
-%{_datadir}/cpuinfo
-%{_includedir}/cpuinfo.h
-%endif
-
-%if %{without cpuinfo}
-%{_libdir}/libclog.a
-%else
-%ifarch x86_64 aarch64
-%{_libdir}/libclog.a
-%endif
-%endif
-
-%ifarch x86_64 aarch64
-%if %{without pthreadpool}
-# pthreadpool
-%{_libdir}/libpthreadpool.a
-%{_includedir}/pthreadpool.h
-%endif
-
-# QNNPACK
-%{_libdir}/libpytorch_qnnpack.a
-%{_libdir}/libqnnpack.a
 %endif
 
 %files devel
@@ -199,48 +155,45 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_includedir}/c10
 %{_includedir}/torch
 %{_includedir}/caffe2
-
-%if %{without cpuinfo}
-%{_includedir}/clog.h
-%else
-%ifarch x86_64 aarch64
-%{_includedir}/clog.h
-%endif
-%endif
-
-# FP16
-%if %{without fp16}
 %{_includedir}/fp16.h
 %{_includedir}/fp16
-%else
-%exclude %{_includedir}/fp16.h
-%exclude %{_includedir}/fp16
-%endif
+%{_includedir}/psimd.h
+/usr/lib/libc10.so
+/usr/lib/libtorch.so
+/usr/lib/libtorch_cpu.so
+/usr/lib/libtorch_global_deps.so
 
 %ifarch x86_64 aarch64
-# FXdiv
+
 %if %{without fxdiv}
 %{_includedir}/fxdiv.h
 %else
 %exclude %{_includedir}/fxdiv.h
 %endif
+
+%if %{without pthreadpool}
+%{_libdir}/libpthreadpool.a
+%{_includedir}/pthreadpool.h
 %endif
 
-%if %{without psimd}
-# psmid
-%{_includedir}/psimd.h
-%else
-%exclude %{_includedir}/psimd.h
 %endif
 
 %ifarch x86_64 aarch64
-
-# QNNPACK
-%{_includedir}/qnnpack.h
-%{_includedir}/qnnpack_func.h
+# exclude some things
+%exclude %{_includedir}/clog.h
+%exclude %{_includedir}/qnnpack.h
+%exclude %{_includedir}/qnnpack_func.h
+%exclude %{_libdir}/libclog.a
+%exclude %{_libdir}/libpytorch_qnnpack.a
+%exclude %{_libdir}/libqnnpack.a
 %endif
 
 %changelog
+* Thu Sep 21 2023 Tom Rix <trix@redhat.com> - 2.0.1-12
+- Use so version
+- remove option to not use system cpuinfo, fp16, psimd
+- exclude some things that will never be packaged
+
 * Sat Sep 16 2023 Tom Rix <trix@redhat.com> - 2.0.1-11
 - Try rawhide bound fxdiv package
 - Try rawhide bound pthreadpool package
