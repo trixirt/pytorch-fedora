@@ -2,6 +2,7 @@
 
 %bcond_with check
 %bcond_with fxdiv
+%bcond_with gloo
 %bcond_with new
 %bcond_with pthreadpool
 
@@ -47,20 +48,26 @@ BuildRequires:  openblas-static
 BuildRequires:  clang-devel
 BuildRequires:  cmake
 BuildRequires:  cpuinfo-devel
+BuildRequires:  fmt-devel
 BuildRequires:  FP16-devel
 %if %{with fxdiv}
 BuildRequires:  FXdiv-devel
 %endif
+%if %{with gloo}
+BuildRequires:  gloo-devel
+%endif
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
 BuildRequires:  make
+BuildRequires:  onnx-devel
+BuildRequires:  protobuf-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  psimd-devel
 %if %{with pthreadpool}
 BuildRequires:  pthreadpool-devel
 %endif
 %if %{with python}
-BuildRequires:  python3.10-devel
+BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 %endif
 BuildRequires:  python3-pybind11
@@ -92,6 +99,7 @@ for %{name}.
 %autosetup -p1 -n %{name}-v%{version}
 %endif
 
+
 %build
 %if 0%{?rhel}
 ulimit -n 2048
@@ -114,12 +122,16 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
         -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
         -DHAVE_SOVERSION=ON \
-        -DONNX_ML=OFF \
         -DUSE_CUDA=OFF \
+	-DUSE_DISTRIBUTED=ON \
         -DUSE_FBGEMM=OFF \
+	-DUSE_ITT=OFF \
         -DUSE_KINETO=OFF \
         -DUSE_MKLDNN=OFF \
 	-DUSE_NNPACK=OFF \
+	-DUSE_OPENMP=OFF \
+	-DUSE_PYTORCH_QNNPACK=OFF \
+	-DUSE_QNNPACK=OFF \
 %if %{with rocm}
         -DUSE_ROCM=ON \
 %else
@@ -130,12 +142,17 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %if %{with fxdiv}
         -DUSE_SYSTEM_FXDIV=ON \
 %endif
+%if %{with gloo}
+        -DUSE_SYSTEM_GLOO=ON \
+%endif
+        -DUSE_SYSTEM_ONNX=ON \
         -DUSE_SYSTEM_PSIMD=ON \
 %if %{with pthreadpool}
         -DUSE_SYSTEM_PTHREADPOOL=ON \
 %endif
         -DUSE_SYSTEM_PYBIND11=ON \
         -DUSE_SYSTEM_SLEEF=ON \
+        -DUSE_SYSTEM_ZSTD=ON \
 	-DUSE_TENSORPIPE=OFF \
 	-DUSE_XNNPACK=OFF
 
@@ -170,9 +187,6 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_includedir}/c10
 %{_includedir}/torch
 %{_includedir}/caffe2
-%{_includedir}/fp16.h
-%{_includedir}/fp16
-%{_includedir}/psimd.h
 /usr/lib/libc10.so
 /usr/lib/libtorch.so
 /usr/lib/libtorch_cpu.so
@@ -182,8 +196,6 @@ export PYTORCH_ROCM_ARCH=gfx1102
 
 %if %{without fxdiv}
 %{_includedir}/fxdiv.h
-%else
-%exclude %{_includedir}/fxdiv.h
 %endif
 
 %if %{without pthreadpool}
@@ -193,17 +205,10 @@ export PYTORCH_ROCM_ARCH=gfx1102
 
 %endif
 
-%ifarch x86_64 aarch64
-# exclude some things
-%exclude %{_includedir}/clog.h
-%exclude %{_includedir}/qnnpack.h
-%exclude %{_includedir}/qnnpack_func.h
-%exclude %{_libdir}/libclog.a
-%exclude %{_libdir}/libpytorch_qnnpack.a
-%exclude %{_libdir}/libqnnpack.a
-%endif
-
 %changelog
+* Fri Sep 22 2023 Tom Rix <trix@redhat.com> - 2.0.1-13
+- Try rawhide bound gloo
+
 * Thu Sep 21 2023 Tom Rix <trix@redhat.com> - 2.0.1-12
 - Use so version
 - remove option to not use system cpuinfo, fp16, psimd
