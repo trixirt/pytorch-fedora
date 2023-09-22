@@ -2,8 +2,9 @@
 
 %bcond_with check
 %bcond_with fxdiv
+%bcond_with new
 %bcond_with pthreadpool
-%bcond_with python
+
 %bcond_with rocm
 %bcond_with toolchain_clang
 
@@ -17,16 +18,26 @@
 Summary:        An AI/ML python package
 Name:           pytorch
 License:        TBD
+URL:            https://github.com/pytorch/pytorch
+
+%if %{with new}
+%global commit0 1841d54370d167365d15f0ac78efc2c56cdf43ab
+%global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
+Version:        2.1.0
+Release:        rc5%{?dist}
+Source0:        %{url}/archive/%{commit0}/%{name}-%{shortcommit0}.tar.gz
+%bcond_without python
+%else
 Version:        2.0.1
 Release:        12%{?dist}
-
-URL:            https://github.com/pytorch/pytorch
 Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Include-stdexcept.patch
 Patch1:         0001-Include-stdint.h.patch
 Patch2:         fix-cpuinfo-implicit-syscall.patch
 Patch3:         do-not-force-Werror-on-Pooling.patch
 Patch4:         fallback-to-cpu_kernel-for-VSX.patch
+%bcond_with python
+%endif
 
 %if 0%{?fedora}
 BuildRequires:  blas-static
@@ -75,7 +86,11 @@ This package contains the developement libraries and headers
 for %{name}.
 
 %prep
+%if %{with new}
+%autosetup -p1 -n %{name}-%{commit0}
+%else
 %autosetup -p1 -n %{name}-v%{version}
+%endif
 
 %build
 %if 0%{?rhel}
