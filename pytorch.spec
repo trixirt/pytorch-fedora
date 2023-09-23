@@ -4,8 +4,8 @@
 %bcond_with fxdiv
 %bcond_with gloo
 %bcond_with new
+%bcond_with pocketfft
 %bcond_with pthreadpool
-
 %bcond_with rocm
 %bcond_with toolchain_clang
 
@@ -27,6 +27,7 @@ URL:            https://github.com/pytorch/pytorch
 Version:        2.1.0
 Release:        rc5%{?dist}
 Source0:        %{url}/archive/%{commit0}/%{name}-%{shortcommit0}.tar.gz
+Patch0:         0001-Prepare-pytorch-cmake-for-fedora.patch
 %bcond_without python
 %else
 Version:        2.0.1
@@ -60,6 +61,9 @@ BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
 BuildRequires:  make
 BuildRequires:  onnx-devel
+%if %{with pocketfft}
+BuildRequires:  pocketfft-devel
+%endif
 BuildRequires:  protobuf-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  psimd-devel
@@ -122,6 +126,7 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
         -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
         -DHAVE_SOVERSION=ON \
+        -DTORCH_INSTALL_LIB_DIR=%{_lib} \
         -DUSE_CUDA=OFF \
 	-DUSE_DISTRIBUTED=ON \
         -DUSE_FBGEMM=OFF \
@@ -173,13 +178,13 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_datadir}/cmake/Torch
 
 /usr/lib/libc10.so.*
-/usr/lib/libtorch.so.*
-/usr/lib/libtorch_cpu.so.*
-/usr/lib/libtorch_global_deps.so.*
+%{_libdir}/libtorch.so.*
+%{_libdir}/libtorch_cpu.so.*
+%{_libdir}/libtorch_global_deps.so.*
 %ifarch x86_64
-%{_libdir}/libCaffe2_perfkernels_avx.a
-%{_libdir}/libCaffe2_perfkernels_avx2.a
-%{_libdir}/libCaffe2_perfkernels_avx512.a
+%exclude %{_libdir}/libCaffe2_perfkernels_avx.a
+%exclude %{_libdir}/libCaffe2_perfkernels_avx2.a
+%exclude %{_libdir}/libCaffe2_perfkernels_avx512.a
 %endif
 
 %files devel
@@ -188,9 +193,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_includedir}/torch
 %{_includedir}/caffe2
 /usr/lib/libc10.so
-/usr/lib/libtorch.so
-/usr/lib/libtorch_cpu.so
-/usr/lib/libtorch_global_deps.so
+%{_libdir}/libtorch.so
+%{_libdir}/libtorch_cpu.so
+%{_libdir}/libtorch_global_deps.so
 
 %ifarch x86_64 aarch64
 
@@ -206,6 +211,9 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
 
 %changelog
+* Sat Sep 23 2023 Tom Rix <trix@redhat.com> - 2.0.1-14
+- Try rawhide bound pocketfft
+
 * Fri Sep 22 2023 Tom Rix <trix@redhat.com> - 2.0.1-13
 - Try rawhide bound gloo
 
