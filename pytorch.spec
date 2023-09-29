@@ -1,7 +1,6 @@
 %global debug_package %{nil}
 
 %bcond_with check
-%bcond_with fxdiv
 %bcond_with gloo
 %bcond_with new
 %bcond_with pocketfft
@@ -50,6 +49,7 @@ BuildRequires:  clang-devel
 BuildRequires:  cmake
 BuildRequires:  cpuinfo-devel
 BuildRequires:  fmt-devel
+BuildRequires:  flatbuffers-devel
 BuildRequires:  FP16-devel
 %if %{with fxdiv}
 BuildRequires:  FXdiv-devel
@@ -64,7 +64,6 @@ BuildRequires:  onnx-devel
 %if %{with pocketfft}
 BuildRequires:  pocketfft-devel
 %endif
-BuildRequires:  protobuf-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  psimd-devel
 %if %{with pthreadpool}
@@ -132,6 +131,7 @@ export PYTORCH_ROCM_ARCH=gfx1102
         -DUSE_FBGEMM=OFF \
 	-DUSE_ITT=OFF \
         -DUSE_KINETO=OFF \
+	-DUSE_LITE_INTERPRETER_PROFILER=OFF \
         -DUSE_MKLDNN=OFF \
 	-DUSE_NNPACK=OFF \
 	-DUSE_OPENMP=OFF \
@@ -144,9 +144,7 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
         -DUSE_SYSTEM_CPUINFO=ON \
         -DUSE_SYSTEM_FP16=ON \
-%if %{with fxdiv}
         -DUSE_SYSTEM_FXDIV=ON \
-%endif
 %if %{with gloo}
         -DUSE_SYSTEM_GLOO=ON \
 %endif
