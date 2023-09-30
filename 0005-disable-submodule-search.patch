@@ -1,0 +1,25 @@
+From 62b1a49a1c3c350abee5801effa4af47dfa987ab Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Fri, 29 Sep 2023 17:21:13 -0700
+Subject: [PATCH 5/6] disable submodule search
+
+---
+ setup.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/setup.py b/setup.py
+index 17bf16b89a..b8c8ae5506 100644
+--- a/setup.py
++++ b/setup.py
+@@ -452,7 +452,7 @@ def mirror_files_into_torchgen():
+ def build_deps():
+     report("-- Building version " + version)
+ 
+-    check_submodules()
++    # check_submodules()
+     check_pydep("yaml", "pyyaml")
+ 
+     build_caffe2(
+-- 
+2.41.0
+

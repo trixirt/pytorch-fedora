@@ -1,0 +1,39 @@
+From 616ba17c399925ab4b9ba16fc6746932fc414d99 Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Fri, 29 Sep 2023 06:19:29 -0700
+Subject: [PATCH 2/6] Regenerate flatbuffer header
+
+For this error
+torch/csrc/jit/serialization/mobile_bytecode_generated.h:12:41:
+error: static assertion failed: Non-compatible flatbuffers version included
+   12 |               FLATBUFFERS_VERSION_MINOR == 3 &&
+
+PyTorch is expecting 23.3.3, what f38 has
+Rawhide is at 23.5.26
+
+Regenerate with
+flatc --cpp --gen-mutable --no-prefix --scoped-enums mobile_bytecode.fbs
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ torch/csrc/jit/serialization/mobile_bytecode_generated.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/torch/csrc/jit/serialization/mobile_bytecode_generated.h b/torch/csrc/jit/serialization/mobile_bytecode_generated.h
+index cffe8bc7a6..83575e4c19 100644
+--- a/torch/csrc/jit/serialization/mobile_bytecode_generated.h
++++ b/torch/csrc/jit/serialization/mobile_bytecode_generated.h
+@@ -9,8 +9,8 @@
+ // Ensure the included flatbuffers.h is the same version as when this file was
+ // generated, otherwise it may not be compatible.
+ static_assert(FLATBUFFERS_VERSION_MAJOR == 23 &&
+-              FLATBUFFERS_VERSION_MINOR == 3 &&
+-              FLATBUFFERS_VERSION_REVISION == 3,
++              FLATBUFFERS_VERSION_MINOR == 5 &&
++              FLATBUFFERS_VERSION_REVISION == 26,
+              "Non-compatible flatbuffers version included");
+ 
+ namespace torch {
+-- 
+2.41.0
+

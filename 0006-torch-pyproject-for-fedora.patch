@@ -1,0 +1,29 @@
+From bc6ea5bf03d8f2bfd13598843d6cd018cfbf6f5e Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Sat, 30 Sep 2023 07:56:25 -0700
+Subject: [PATCH 6/6] torch pyproject for fedora
+
+---
+ pyproject.toml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index eb764cb895..b3fd64d523 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -9,10 +9,12 @@ requires = [
+     "cmake",
+     "typing-extensions",
+     "requests",
++    "setuptools_scm"
+ ]
+ # Use legacy backend to import local packages in setup.py
+ build-backend = "setuptools.build_meta:__legacy__"
+ 
++[tool.setuptools_scm]
+ 
+ [tool.black]
+ # Uncomment if pyproject.toml worked fine to ensure consistency with flake8
+-- 
+2.41.0
+

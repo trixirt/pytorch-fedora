@@ -1,0 +1,26 @@
+From 506c17b238fa56fbe50001a194edd4966e7de29a Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Fri, 29 Sep 2023 13:58:28 -0700
+Subject: [PATCH 4/6] torch python 3.12 changes
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ torch/csrc/dynamo/cpython_defs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/torch/csrc/dynamo/cpython_defs.h b/torch/csrc/dynamo/cpython_defs.h
+index f0a0e1a88e..f58becd246 100644
+--- a/torch/csrc/dynamo/cpython_defs.h
++++ b/torch/csrc/dynamo/cpython_defs.h
+@@ -6,7 +6,7 @@
+ // should go in cpython_defs.c. Copying is required when, e.g.,
+ // we need to call internal CPython functions that are not exposed.
+ 
+-#if IS_PYTHON_3_11_PLUS && !(IS_PYTHON_3_12_PLUS)
++#if IS_PYTHON_3_11_PLUS 
+ 
+ #include <internal/pycore_frame.h>
+ 
+-- 
+2.41.0
+
