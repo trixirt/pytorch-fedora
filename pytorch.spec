@@ -1,14 +1,14 @@
 %global debug_package %{nil}
+%global _harden_c_flags %{nil}
+%global _fortify_level 1
+
+%bcond_without new
+%bcond_without clang
 
 %bcond_with check
 %bcond_with gloo
-%bcond_with new
-%bcond_with pocketfft
-%bcond_with pthreadpool
-%bcond_with rocm
-%bcond_with toolchain_clang
 
-%if %{with toolchain_clang}
+%if %{with clang}
 %global toolchain clang
 %global _clang_lto_cflags -flto=thin
 %else
@@ -17,16 +17,20 @@
 
 Summary:        An AI/ML python package
 Name:           pytorch
-License:        TBD
+License:        BSD-3-Clause
 URL:            https://github.com/pytorch/pytorch
 
 %if %{with new}
 %global commit0 1841d54370d167365d15f0ac78efc2c56cdf43ab
 %global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 Version:        2.1.0
-Release:        rc5%{?dist}
+Release:        1%{?dist}
 Source0:        %{url}/archive/%{commit0}/%{name}-%{shortcommit0}.tar.gz
 Patch0:         0001-Prepare-pytorch-cmake-for-fedora.patch
+Patch1:         0002-Regenerate-flatbuffer-header.patch
+Patch2:         0003-Stub-in-kineto-ActivityType.patch
+Patch3:         0004-torch-python-3.12-changes.patch
+Patch4:         0005-disable-submodule-search.patch
 %bcond_without python
 %else
 Version:        2.0.1
@@ -51,24 +55,18 @@ BuildRequires:  cpuinfo-devel
 BuildRequires:  fmt-devel
 BuildRequires:  flatbuffers-devel
 BuildRequires:  FP16-devel
-%if %{with fxdiv}
-BuildRequires:  FXdiv-devel
-%endif
+BuildRequires:  fxdiv-devel
 %if %{with gloo}
 BuildRequires:  gloo-devel
 %endif
 BuildRequires:  gcc-c++
 BuildRequires:  lapack-static
-BuildRequires:  make
+BuildRequires:  ninja-build
 BuildRequires:  onnx-devel
-%if %{with pocketfft}
 BuildRequires:  pocketfft-devel
-%endif
 BuildRequires:  protobuf-devel
 BuildRequires:  psimd-devel
-%if %{with pthreadpool}
 BuildRequires:  pthreadpool-devel
-%endif
 %if %{with python}
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
@@ -102,18 +100,12 @@ for %{name}.
 %autosetup -p1 -n %{name}-v%{version}
 %endif
 
-
 %build
 %if 0%{?rhel}
 ulimit -n 2048
 %endif
 
-%if %{with rocm}
-# Radeon RX 7600
-export PYTORCH_ROCM_ARCH=gfx1102
-%endif
-
-%cmake \
+%cmake -G Ninja \
         -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
         -DBUILD_CUSTOM_PROTOBUF=OFF \
 %if %{without python}
@@ -125,9 +117,8 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
         -DCAFFE2_LINK_LOCAL_PROTOBUF=OFF \
         -DHAVE_SOVERSION=ON \
-        -DTORCH_INSTALL_LIB_DIR=%{_lib} \
         -DUSE_CUDA=OFF \
-	-DUSE_DISTRIBUTED=ON \
+	-DUSE_DISTRIBUTED=OFF \
         -DUSE_FBGEMM=OFF \
 	-DUSE_ITT=OFF \
         -DUSE_KINETO=OFF \
@@ -137,11 +128,7 @@ export PYTORCH_ROCM_ARCH=gfx1102
 	-DUSE_OPENMP=OFF \
 	-DUSE_PYTORCH_QNNPACK=OFF \
 	-DUSE_QNNPACK=OFF \
-%if %{with rocm}
-        -DUSE_ROCM=ON \
-%else
         -DUSE_ROCM=OFF \
-%endif
         -DUSE_SYSTEM_CPUINFO=ON \
         -DUSE_SYSTEM_FP16=ON \
         -DUSE_SYSTEM_FXDIV=ON \
@@ -150,9 +137,7 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %endif
         -DUSE_SYSTEM_ONNX=ON \
         -DUSE_SYSTEM_PSIMD=ON \
-%if %{with pthreadpool}
         -DUSE_SYSTEM_PTHREADPOOL=ON \
-%endif
         -DUSE_SYSTEM_PYBIND11=ON \
         -DUSE_SYSTEM_SLEEF=ON \
         -DUSE_SYSTEM_ZSTD=ON \
@@ -175,40 +160,31 @@ export PYTORCH_ROCM_ARCH=gfx1102
 %{_datadir}/cmake/Caffe2
 %{_datadir}/cmake/Torch
 
+/usr/bin/torch_shm_manager
 /usr/lib/libc10.so.*
-%{_libdir}/libtorch.so.*
-%{_libdir}/libtorch_cpu.so.*
-%{_libdir}/libtorch_global_deps.so.*
-%ifarch x86_64
-%exclude %{_libdir}/libCaffe2_perfkernels_avx.a
-%exclude %{_libdir}/libCaffe2_perfkernels_avx2.a
-%exclude %{_libdir}/libCaffe2_perfkernels_avx512.a
-%endif
+/usr/lib/libshm.so.*
+/usr/lib/libtorch*.so.*
 
 %files devel
 %{_includedir}/ATen
 %{_includedir}/c10
+%{_includedir}/libshm.h
 %{_includedir}/torch
 %{_includedir}/caffe2
+%{python3_sitelib}/caffe2/
 /usr/lib/libc10.so
-%{_libdir}/libtorch.so
-%{_libdir}/libtorch_cpu.so
-%{_libdir}/libtorch_global_deps.so
-
-%ifarch x86_64 aarch64
-
-%if %{without fxdiv}
-%{_includedir}/fxdiv.h
-%endif
-
-%if %{without pthreadpool}
-%{_libdir}/libpthreadpool.a
-%{_includedir}/pthreadpool.h
-%endif
-
-%endif
+/usr/lib/libshm.so
+/usr/lib/libtorch*.so
+%exclude /usr/lib/libCaffe2_perfkernels_avx.a
+%exclude /usr/lib/libCaffe2_perfkernels_avx2.a
+%exclude /usr/lib/libCaffe2_perfkernels_avx512.a
 
 %changelog
+* Wed Oct 4 2023 Tom Rix <trix@redhat.com> - 2.1.0-1
+- Update to 2.1
+- Use the pthreadpool package
+- Remve the --with rocm option, too many changes needed.
+
 * Sat Sep 23 2023 Tom Rix <trix@redhat.com> - 2.0.1-14
 - Try rawhide bound pocketfft
 
