@@ -5,7 +5,7 @@
 %global commit0 1841d54370d167365d15f0ac78efc2c56cdf43ab
 %global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 
-# So build lto takes forever, disable
+# lto takes forever, disable
 %global _lto_cflags %{nil}
 
 Name:           python-%{pypi_name}
@@ -52,6 +52,7 @@ BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
 BuildRequires:  python3-typing-extensions
 BuildRequires:  sleef-devel
+BuildRequires:  xnnpack-devel
 
 BuildRequires:  python3-devel
 BuildRequires:  python3dist(filelock)
@@ -132,7 +133,7 @@ export USE_QNNPACK=OFF
 export USE_ROCM=OFF
 export USE_SYSTEM_LIBS=ON
 export USE_TENSORPIPE=OFF
-export USE_XNNPACK=OFF
+export USE_XNNPACK=ON
 
 %py3_build
 
