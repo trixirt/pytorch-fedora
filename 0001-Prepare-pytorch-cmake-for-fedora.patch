@@ -1,4 +1,4 @@
-From 6cbac3355f68d714a4d78447805af37ef53385bc Mon Sep 17 00:00:00 2001
+From aa9e72c4978a5165cb98d4678b4fcb5ebfbe6bb5 Mon Sep 17 00:00:00 2001
 From: Tom Rix <trix@redhat.com>
 Date: Sat, 23 Sep 2023 10:18:52 -0700
 Subject: [PATCH 1/6] Prepare pytorch cmake for fedora
@@ -6,14 +6,17 @@ Subject: [PATCH 1/6] Prepare pytorch cmake for fedora
 Use the system fmt
 Remove foxi use
 Remove warnings/errors for clang 17
+fxdiv is not a library
 
 Signed-off-by: Tom Rix <trix@redhat.com>
 ---
- CMakeLists.txt           |  4 ++--
- c10/CMakeLists.txt       |  2 +-
- cmake/Dependencies.cmake | 16 +---------------
- torch/CMakeLists.txt     |  2 +-
- 4 files changed, 5 insertions(+), 19 deletions(-)
+ CMakeLists.txt                                   |  4 ++--
+ .../native/quantized/cpu/qnnpack/CMakeLists.txt  |  3 ---
+ c10/CMakeLists.txt                               |  2 +-
+ caffe2/CMakeLists.txt                            |  6 +-----
+ cmake/Dependencies.cmake                         | 16 +---------------
+ torch/CMakeLists.txt                             |  2 +-
+ 6 files changed, 6 insertions(+), 27 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 3a48eaf4e2..c7b1bb7a0f 100644
@@ -30,6 +33,21 @@ index 3a48eaf4e2..c7b1bb7a0f 100644
  else()
    # skip unwanted includes from windows.h
    add_compile_definitions(WIN32_LEAN_AND_MEAN)
+diff --git a/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt b/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt
+index fd6b7ff551..218c8e9b2a 100644
+--- a/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt
++++ b/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt
+@@ -393,10 +393,7 @@ elseif(NOT TARGET fxdiv AND USE_SYSTEM_FXDIV)
+   if(NOT FXDIV_HDR)
+     message(FATAL_ERROR "Cannot find fxdiv")
+   endif()
+-  add_library(fxdiv STATIC "${FXDIV_HDR}")
+-  set_property(TARGET fxdiv PROPERTY LINKER_LANGUAGE C)
+ endif()
+-target_link_libraries(pytorch_qnnpack PRIVATE fxdiv)
+ 
+ # ---[ Configure psimd
+ if(NOT TARGET psimd AND NOT USE_SYSTEM_PSIMD)
 diff --git a/c10/CMakeLists.txt b/c10/CMakeLists.txt
 index feebad7cbb..7c029cd88d 100644
 --- a/c10/CMakeLists.txt
@@ -43,6 +61,30 @@ index feebad7cbb..7c029cd88d 100644
  
  find_package(Backtrace)
  if(Backtrace_FOUND)
+diff --git a/caffe2/CMakeLists.txt b/caffe2/CMakeLists.txt
+index 74d0d55719..b975d388a7 100644
+--- a/caffe2/CMakeLists.txt
++++ b/caffe2/CMakeLists.txt
+@@ -107,7 +107,7 @@ endif()
+ # Note: the folders that are being commented out have not been properly
+ # addressed yet.
+ 
+-if(NOT MSVC AND USE_XNNPACK)
++if(NOT MSVC AND USE_XNNPACK AND NOT USE_SYSTEM_FXDIV)
+   if(NOT TARGET fxdiv)
+     set(FXDIV_BUILD_TESTS OFF CACHE BOOL "")
+     set(FXDIV_BUILD_BENCHMARKS OFF CACHE BOOL "")
+@@ -1022,10 +1022,6 @@ elseif(USE_CUDA)
+   endif()
+ endif()
+ 
+-if(NOT MSVC AND USE_XNNPACK)
+-  TARGET_LINK_LIBRARIES(torch_cpu PRIVATE fxdiv)
+-endif()
+-
+ # ==========================================================
+ # formerly-libtorch flags
+ # ==========================================================
 diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
 index c3abce52e4..21b40f3a88 100644
 --- a/cmake/Dependencies.cmake
