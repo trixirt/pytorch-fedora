@@ -7,6 +7,7 @@
 
 %bcond_with check
 %bcond_with gloo
+%bcond_with xnnpack
 
 %if %{with clang}
 %global toolchain clang
@@ -139,10 +140,15 @@ ulimit -n 2048
         -DUSE_SYSTEM_PSIMD=ON \
         -DUSE_SYSTEM_PTHREADPOOL=ON \
         -DUSE_SYSTEM_PYBIND11=ON \
+%if %{with xnnpack}
+	-DUSE_SYSTEM_XNNPACK=ON \
+	-DUSE_XNNPACK=ON \
+%else
+	-DUSE_XNNPACK=OFF
+%endif
         -DUSE_SYSTEM_SLEEF=ON \
         -DUSE_SYSTEM_ZSTD=ON \
-	-DUSE_TENSORPIPE=OFF \
-	-DUSE_XNNPACK=OFF
+	-DUSE_TENSORPIPE=OFF
 
 %cmake_build
 
