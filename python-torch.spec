@@ -24,6 +24,7 @@ Patch1:         0002-Regenerate-flatbuffer-header.patch
 Patch2:         0003-Stub-in-kineto-ActivityType.patch
 Patch3:         0004-torch-python-3.12-changes.patch
 Patch4:         0005-disable-submodule-search.patch
+Patch5:         0007-use-system-xnn-pain.patch
 
 # Limit to these because they are well behaved with clang
 ExclusiveArch:  x86_64 aarch64
@@ -48,6 +49,7 @@ BuildRequires:  onnx-devel
 BuildRequires:  pocketfft-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  psimd-devel
+BuildRequires:  pthreadpool-devel
 BuildRequires:  python3-pybind11
 BuildRequires:  python3-pyyaml
 BuildRequires:  python3-typing-extensions
