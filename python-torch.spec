@@ -136,9 +136,6 @@ cp /usr/include/valgrind/* third_party/valgrind-headers
 # For debugging setup.py
 # export SETUPTOOLS_SCM_DEBUG=1
 
-export CC=clang
-export CXX=clang++
-
 export CMAKE_FIND_PACKAGE_PREFER_CONFIG=ON
 export BUILD_CUSTOM_PROTOBUF=OFF
 export BUILD_SHARED_LIBS=ON
