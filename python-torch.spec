@@ -26,11 +26,21 @@ Source1:        pyproject.toml
 Source0:        %{forgeurl}/releases/download/v%{version}/pytorch-v%{version}.tar.gz
 %endif
 
+# Misc cmake changes that would be difficult to upstream
+# * Use the system fmt
+# * Remove foxi use
+# * Remove warnings/errors for clang 17
+# * fxdiv is not a library on Fedora
 Patch0:         0001-Prepare-pytorch-cmake-for-fedora.patch
+# Use Fedora's fmt
 Patch1:         0002-Regenerate-flatbuffer-header.patch
+# https://github.com/pytorch/pytorch/pull/111048
 Patch2:         0003-Stub-in-kineto-ActivityType.patch
+# PyTorch has not fully baked 3.12 support because 3.12 is so new
 Patch3:         0004-torch-python-3.12-changes.patch
+# Short circuit looking for things that can not be downloade by mock
 Patch4:         0005-disable-submodule-search.patch
+# A Fedora libblas.a problem of undefined symbol
 Patch5:         0001-torch-unresolved-syms-need-gfortran.patch
 
 # Limit to these because they are well behaved with clang
