@@ -1,6 +1,10 @@
 %global pypi_name torch
 %global pypi_version 2.1.0
 
+# Where the src comes from
+%global forgeurl https://github.com/pytorch/pytorch
+
+# So pre releases be tried
 %bcond_with gitcommit
 %if %{with gitcommit}
 # The top of the 2.1.0 branch - update to whatever..
@@ -12,15 +16,14 @@ Name:           python-%{pypi_name}
 Version:        2.1.0
 Release:        2%{?dist}
 Summary:        An AI/ML python package
-
 License:        BSD-3-Clause
 
-URL:            https://github.com/pytorch/pytorch
+URL:            https://pytorch.org/
 %if %{with gitcommit}
-Source0:        %{url}/archive/%{commit0}/pytorch-%{shortcommit0}.tar.gz
+Source0:        %{forgeurl}/archive/%{commit0}/pytorch-%{shortcommit0}.tar.gz
 Source1:        pyproject.toml
 %else
-Source0:        %{url}/releases/download/v%{version}/pytorch-v%{version}.tar.gz
+Source0:        %{forgeurl}/releases/download/v%{version}/pytorch-v%{version}.tar.gz
 %endif
 
 Patch0:         0001-Prepare-pytorch-cmake-for-fedora.patch
