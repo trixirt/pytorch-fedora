@@ -41,6 +41,7 @@ Patch3:         0004-torch-python-3.12-changes.patch
 # Short circuit looking for things that can not be downloade by mock
 Patch4:         0005-disable-submodule-search.patch
 # A Fedora libblas.a problem of undefined symbol
+# libtorch_cpu.so: undefined symbol: _gfortran_stop_string
 Patch5:         0001-torch-unresolved-syms-need-gfortran.patch
 
 # Limit to these because they are well behaved with clang
@@ -87,6 +88,8 @@ BuildRequires:  python3dist(sympy)
 BuildRequires:  python3dist(typing-extensions)
 BuildRequires:  python3dist(sphinx)
 
+Provides:       bundled(miniz) = 2.1.0
+
 %description
 PyTorch is a Python package that provides two high-level features:
 
@@ -130,6 +133,10 @@ cp %{SOURCE1} .
 # Remove what we can
 #
 # For 2.1 this is all but miniz-2.1.0
+# Instead of building as a library, caffe2 reaches into
+# the third_party dir to compile the file.
+# mimiz is licensed MIT
+# https://github.com/richgel999/miniz/blob/master/LICENSE
 mv third_party/miniz-2.1.0 .
 rm -rf third_party/*
 mv miniz-2.1.0 third_party
@@ -139,7 +146,7 @@ mkdir third_party/pocketfft
 #
 # Use the system valgrind headers
 mkdir third_party/valgrind-headers
-cp /usr/include/valgrind/* third_party/valgrind-headers
+cp %{_includedir}/valgrind/* third_party/valgrind-headers
 
 %endif
 
@@ -186,9 +193,6 @@ export USE_SYSTEM_ONNX=ON
 #export USE_SYSTEM_XNNPACK=ON
 export USE_SYSTEM_ZSTD=ON
 
-# libtorch_cpu.so: undefined symbol: _gfortran_stop_string
-# export USE_BLAS=OFF
-
 %py3_build
 
 %install
@@ -196,7 +200,6 @@ export USE_SYSTEM_ZSTD=ON
 
 %files -n python3-%{pypi_name}
 %license LICENSE
-%license third_party/miniz-2.1.0/LICENSE
 %doc README.md
 %{_bindir}/convert-caffe2-to-onnx
 %{_bindir}/convert-onnx-to-caffe2
@@ -204,6 +207,9 @@ export USE_SYSTEM_ZSTD=ON
 %{python3_sitearch}/
 
 %changelog
+* Thu Oct 12 2023 Tom Rix <trix@redhat.com> - 2.1.0-3
+- Address review comments
+
 * Mon Oct 9 2023 Tom Rix <trix@redhat.com> - 2.1.0-2
 - Use the 2.1 release
 - Reduce USE_SYSTEM_LIBS to parts
