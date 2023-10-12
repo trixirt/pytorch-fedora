@@ -1,3 +1,6 @@
+# This is a cmake+ninja project and using the pyproject_ macros fail.
+# As per the 202x guidelines for problems with cmake, reverting to
+# old 201x guildlines and using the old py3_ macros.
 %global pypi_name torch
 %global pypi_version 2.1.0
 
@@ -79,6 +82,7 @@ BuildRequires:  valgrind-devel
 # BuildRequires:  xnnpack-devel
 
 BuildRequires:  python3-devel
+BuildRequires:  python3dist(build)
 BuildRequires:  python3dist(filelock)
 BuildRequires:  python3dist(fsspec)
 BuildRequires:  python3dist(jinja2)
@@ -204,7 +208,10 @@ export USE_SYSTEM_ZSTD=ON
 %{_bindir}/convert-caffe2-to-onnx
 %{_bindir}/convert-onnx-to-caffe2
 %{_bindir}/torchrun
-%{python3_sitearch}/
+%{python3_sitearch}/functorch/
+%{python3_sitearch}/torch/
+%{python3_sitearch}/torch*.egg-info/
+%{python3_sitearch}/torchgen/
 
 %changelog
 * Thu Oct 12 2023 Tom Rix <trix@redhat.com> - 2.1.0-3
