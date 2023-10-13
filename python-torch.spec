@@ -7,7 +7,7 @@
 # Where the src comes from
 %global forgeurl https://github.com/pytorch/pytorch
 
-# So pre releases be tried
+# So pre releases can be tried
 %bcond_with gitcommit
 %if %{with gitcommit}
 # The top of the 2.1.0 branch - update to whatever..
@@ -15,11 +15,24 @@
 %global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 %endif
 
+# Check if static blas,lapack are really needed
+# And this is the error :
+# CMake Error at /usr/lib64/cmake/lapack-3.11.0/lapack-targets.cmake:103 (message):
+#  The imported target "blas" references the file
+#
+#     "/usr/lib64/libblas.a"
+#
+#  but this file does not exist.  Possible reasons include:
+# ...
+#
+# See BZ 2243823
+%bcond_without static_blas
+
 Name:           python-%{pypi_name}
 Version:        2.1.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        An AI/ML python package
-License:        BSD-3-Clause
+License:        BSD-3-Clause and MIT
 
 URL:            https://pytorch.org/
 %if %{with gitcommit}
@@ -46,13 +59,19 @@ Patch4:         0005-disable-submodule-search.patch
 # A Fedora libblas.a problem of undefined symbol
 # libtorch_cpu.so: undefined symbol: _gfortran_stop_string
 Patch5:         0001-torch-unresolved-syms-need-gfortran.patch
+# Fedora requires versioned so's
+Patch6:         0001-pytorch-use-SO-version-by-default.patch
 
 # Limit to these because they are well behaved with clang
 ExclusiveArch:  x86_64 aarch64
 %global toolchain clang
 
 %if 0%{?fedora}
+%if %{with static_blas}
 BuildRequires:  blas-static
+%else
+BuildRequires:  blas-devel
+%endif
 %else
 BuildRequires:  openblas-static
 %endif
@@ -65,7 +84,11 @@ BuildRequires:  FP16-devel
 BuildRequires:  fxdiv-devel
 BuildRequires:  gcc-c++
 BuildRequires:  gcc-gfortran
+%if %{with static_blas}
 BuildRequires:  lapack-static
+%else
+BuildRequires:  lapack-devel
+%endif
 BuildRequires:  ninja-build
 BuildRequires:  onnx-devel
 BuildRequires:  pocketfft-devel
@@ -82,7 +105,6 @@ BuildRequires:  valgrind-devel
 # BuildRequires:  xnnpack-devel
 
 BuildRequires:  python3-devel
-BuildRequires:  python3dist(build)
 BuildRequires:  python3dist(filelock)
 BuildRequires:  python3dist(fsspec)
 BuildRequires:  python3dist(jinja2)
@@ -164,7 +186,6 @@ export BUILD_CUSTOM_PROTOBUF=OFF
 export BUILD_SHARED_LIBS=ON
 export BUILD_TEST=OFF
 export CAFFE2_LINK_LOCAL_PROTOBUF=OFF
-export HAVE_SOVERSION=ON
 export USE_CUDA=OFF
 export USE_DISTRIBUTED=OFF
 export USE_FBGEMM=OFF
@@ -216,6 +237,7 @@ export USE_SYSTEM_ZSTD=ON
 %changelog
 * Thu Oct 12 2023 Tom Rix <trix@redhat.com> - 2.1.0-3
 - Address review comments
+- Force so versioning on
 
 * Mon Oct 9 2023 Tom Rix <trix@redhat.com> - 2.1.0-2
 - Use the 2.1 release
