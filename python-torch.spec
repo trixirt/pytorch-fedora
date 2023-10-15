@@ -1,11 +1,15 @@
-# This is a cmake+ninja project and using the pyproject_ macros fail.
-# As per the 202x guidelines for problems with cmake, reverting to
-# old 201x guildlines and using the old py3_ macros.
 %global pypi_name torch
 %global pypi_version 2.1.0
 
 # Where the src comes from
 %global forgeurl https://github.com/pytorch/pytorch
+
+# To check between pyproject_ and py3_ building
+# current pyproject problem with mock
+# + /usr/bin/python3 -Bs /usr/lib/rpm/redhat/pyproject_wheel.py /builddir/build/BUILD/pytorch-v2.1.0/pyproject-wheeldir
+# /usr/bin/python3: No module named pip
+# Adding pip to build requires does not fix
+%bcond_with pyproject
 
 # So pre releases can be tried
 %bcond_with gitcommit
@@ -30,7 +34,7 @@
 
 Name:           python-%{pypi_name}
 Version:        2.1.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        An AI/ML python package
 License:        BSD-3-Clause and MIT
 
@@ -84,6 +88,7 @@ BuildRequires:  FP16-devel
 BuildRequires:  fxdiv-devel
 BuildRequires:  gcc-c++
 BuildRequires:  gcc-gfortran
+BuildRequires:  gloo-devel
 %if %{with static_blas}
 BuildRequires:  lapack-static
 %else
@@ -101,8 +106,7 @@ BuildRequires:  python3-pyyaml
 BuildRequires:  python3-typing-extensions
 BuildRequires:  sleef-devel
 BuildRequires:  valgrind-devel
-# In review 2242399
-# BuildRequires:  xnnpack-devel
+BuildRequires:  xnnpack-devel
 
 BuildRequires:  python3-devel
 BuildRequires:  python3dist(filelock)
@@ -164,8 +168,15 @@ cp %{SOURCE1} .
 # mimiz is licensed MIT
 # https://github.com/richgel999/miniz/blob/master/LICENSE
 mv third_party/miniz-2.1.0 .
+#
+# setup.py depends on this script
+mv third_party/build_bundled.py .
+# Remove everything
 rm -rf third_party/*
+# Put stuff back
+mv build_bundled.py third_party
 mv miniz-2.1.0 third_party
+
 #
 # Fake out pocketfft, and system header will be used
 mkdir third_party/pocketfft
@@ -175,6 +186,10 @@ mkdir third_party/valgrind-headers
 cp %{_includedir}/valgrind/* third_party/valgrind-headers
 
 %endif
+
+# Broken, looking for cmake,ninja
+# %generate_buildrequires
+# %pyproject_buildrequires
 
 %build
 
@@ -199,29 +214,22 @@ export USE_OPENMP=OFF
 export USE_PYTORCH_QNNPACK=OFF
 export USE_QNNPACK=OFF
 export USE_ROCM=OFF
-
+export USE_SYSTEM_LIBS=ON
 export USE_TENSORPIPE=OFF
-export USE_XNNPACK=OFF
+export USE_XNNPACK=ON
 
-# Use system libs not quite there, break it down
-#export USE_SYSTEM_LIBS=ON
-export USE_SYSTEM_CPUINFO=ON
-export USE_SYSTEM_SLEEF=ON
-export USE_SYSTEM_GLOO=OFF
-export USE_SYSTEM_FP16=ON
-export USE_SYSTEM_PYBIND11=ON
-export USE_SYSTEM_PTHREADPOOL=ON
-export USE_SYSTEM_PSIMD=ON
-export USE_SYSTEM_FXDIV=ON
-export USE_SYSTEM_BENCHMARK=ON
-export USE_SYSTEM_ONNX=ON
-#export USE_SYSTEM_XNNPACK=ON
-export USE_SYSTEM_ZSTD=ON
-
+%if %{with pyproject}
+%pyproject_wheel
+%else
 %py3_build
+%endif
 
 %install
+%if %{with pyproject}
+%pyproject_install
+%else
 %py3_install
+%endif
 
 %files -n python3-%{pypi_name}
 %license LICENSE
@@ -231,10 +239,17 @@ export USE_SYSTEM_ZSTD=ON
 %{_bindir}/torchrun
 %{python3_sitearch}/functorch/
 %{python3_sitearch}/torch/
-%{python3_sitearch}/torch*.egg-info/
 %{python3_sitearch}/torchgen/
+%if %{without pyproject}
+%{python3_sitearch}/torch*.egg-info/
+%endif
 
 %changelog
+* Sat Oct 14 2023 Tom Rix <trix@redhat.com> - 2.1.0-4
+- Use gloo, xnnpack
+- Find missing build_bundled.py
+- Add pyproject option
+
 * Thu Oct 12 2023 Tom Rix <trix@redhat.com> - 2.1.0-3
 - Address review comments
 - Force so versioning on
