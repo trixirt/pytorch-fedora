@@ -22,11 +22,9 @@ License:        BSD-3-Clause
 URL:            https://github.com/pytorch/pytorch
 
 %if %{with new}
-%global commit0 1841d54370d167365d15f0ac78efc2c56cdf43ab
-%global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 Version:        2.1.0
-Release:        1%{?dist}
-Source0:        %{url}/archive/%{commit0}/%{name}-%{shortcommit0}.tar.gz
+Release:        2%{?dist}
+Source0:        %{url}/releases/download/v%{version}/%{name}-v%{version}.tar.gz
 Patch0:         0001-Prepare-pytorch-cmake-for-fedora.patch
 Patch1:         0002-Regenerate-flatbuffer-header.patch
 Patch2:         0003-Stub-in-kineto-ActivityType.patch
@@ -95,11 +93,7 @@ This package contains the developement libraries and headers
 for %{name}.
 
 %prep
-%if %{with new}
-%autosetup -p1 -n %{name}-%{commit0}
-%else
 %autosetup -p1 -n %{name}-v%{version}
-%endif
 
 %build
 %if 0%{?rhel}
@@ -144,7 +138,7 @@ ulimit -n 2048
 	-DUSE_SYSTEM_XNNPACK=ON \
 	-DUSE_XNNPACK=ON \
 %else
-	-DUSE_XNNPACK=OFF
+	-DUSE_XNNPACK=OFF \
 %endif
         -DUSE_SYSTEM_SLEEF=ON \
         -DUSE_SYSTEM_ZSTD=ON \
@@ -186,6 +180,10 @@ ulimit -n 2048
 %exclude /usr/lib/libCaffe2_perfkernels_avx512.a
 
 %changelog
+* Mon Oct 9 2023 Tom Rix <trix@redhat.com> - 2.1.0-2
+- Use 2.1 release
+- Remove 
+
 * Wed Oct 4 2023 Tom Rix <trix@redhat.com> - 2.1.0-1
 - Update to 2.1
 - Use the pthreadpool package
