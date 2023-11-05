@@ -261,13 +261,7 @@
 %{python3_sitearch}/torch/include/ATen/cuda/ScanUtils.cuh
 %{python3_sitearch}/torch/include/ATen/cuda/Sleep.h
 %{python3_sitearch}/torch/include/ATen/cuda/ThrustAllocator.h
-%{python3_sitearch}/torch/include/ATen/cudnn/cudnn-wrapper.h
-%{python3_sitearch}/torch/include/ATen/cudnn/Descriptors.h
-%{python3_sitearch}/torch/include/ATen/cudnn/Exceptions.h
-%{python3_sitearch}/torch/include/ATen/cudnn/Handle.h
-%{python3_sitearch}/torch/include/ATen/cudnn/Handles.h
-%{python3_sitearch}/torch/include/ATen/cudnn/Types.h
-%{python3_sitearch}/torch/include/ATen/cudnn/Utils.h
+%{python3_sitearch}/torch/include/ATen/cudnn/*.h
 %{python3_sitearch}/torch/include/ATen/detail/CUDAHooksInterface.h
 %{python3_sitearch}/torch/include/ATen/detail/FunctionTraits.h
 %{python3_sitearch}/torch/include/ATen/detail/HIPHooksInterface.h

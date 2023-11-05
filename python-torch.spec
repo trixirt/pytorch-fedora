@@ -234,10 +234,13 @@ export USE_XNNPACK=ON
 # empty files
 rm %{buildroot}%{python3_sitearch}/torch/py.typed
 rm %{buildroot}%{python3_sitearch}/torch/ao/quantization/backend_config/observation_type.py
+rm %{buildroot}%{python3_sitearch}/torch/cuda/error.py
+rm %{buildroot}%{python3_sitearch}/torch/cuda/__pycache__/error.*.pyc
+rm %{buildroot}%{python3_sitearch}/torch/include/ATen/cudnn/Exceptions.h
 # exec permission
 for f in `find %{buildroot}%{python3_sitearch} -name '*.py'`; do
     if [ ! -x $f ]; then
-	sed -i '1{\@^#!/usr/bin@d}' $f
+        sed -i '1{\@^#!/usr/bin@d}' $f
     fi
 done
 
