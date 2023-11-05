@@ -46,6 +46,9 @@ Source0:        %{forgeurl}/archive/%{commit0}/pytorch-%{shortcommit0}.tar.gz
 Source1:        pyproject.toml
 %else
 Source0:        %{forgeurl}/releases/download/v%{version}/pytorch-v%{version}.tar.gz
+Source1:        pt_dirs.txt
+Source2:        pt_devel_headers.txt
+Source3:        pt_python.txt
 %endif
 
 # Misc cmake changes that would be difficult to upstream
@@ -228,8 +231,6 @@ export USE_XNNPACK=ON
 %install
 %py3_install
 
-# missplaced files
-mv %{buildroot}%{python3_sitearch}/torch/_C.cpython-312-x86_64-linux-gnu.so %{buildroot}%{python3_sitearch}/torch/lib/
 # empty files
 rm %{buildroot}%{python3_sitearch}/torch/py.typed
 rm %{buildroot}%{python3_sitearch}/torch/ao/quantization/backend_config/observation_type.py
@@ -243,842 +244,76 @@ done
 # shebangs
 %py3_shebang_fix %{buildroot}%{python3_sitearch}
 
+#
+# Main package
 %files -n python3-%{pypi_name}
 
-%dir %{python3_sitearch}/torch
-%dir %{python3_sitearch}/torch/amp
-%dir %{python3_sitearch}/torch/amp/__pycache__
-%dir %{python3_sitearch}/torch/ao
-%dir %{python3_sitearch}/torch/ao/nn
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/modules
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/qat
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/qat/modules
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/qat/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/qat/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/dynamic
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/dynamic/modules
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/dynamic/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/modules
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/intrinsic/quantized/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/qat
-%dir %{python3_sitearch}/torch/ao/nn/qat/dynamic
-%dir %{python3_sitearch}/torch/ao/nn/qat/dynamic/modules
-%dir %{python3_sitearch}/torch/ao/nn/qat/dynamic/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/qat/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/qat/modules
-%dir %{python3_sitearch}/torch/ao/nn/qat/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/qat/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantizable
-%dir %{python3_sitearch}/torch/ao/nn/quantizable/modules
-%dir %{python3_sitearch}/torch/ao/nn/quantizable/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantizable/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantized
-%dir %{python3_sitearch}/torch/ao/nn/quantized/dynamic
-%dir %{python3_sitearch}/torch/ao/nn/quantized/dynamic/modules
-%dir %{python3_sitearch}/torch/ao/nn/quantized/dynamic/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantized/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantized/modules
-%dir %{python3_sitearch}/torch/ao/nn/quantized/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantized/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantized/reference
-%dir %{python3_sitearch}/torch/ao/nn/quantized/reference/modules
-%dir %{python3_sitearch}/torch/ao/nn/quantized/reference/modules/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/quantized/reference/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/sparse
-%dir %{python3_sitearch}/torch/ao/nn/sparse/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/sparse/quantized
-%dir %{python3_sitearch}/torch/ao/nn/sparse/quantized/dynamic
-%dir %{python3_sitearch}/torch/ao/nn/sparse/quantized/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/ao/nn/sparse/quantized/__pycache__
-%dir %{python3_sitearch}/torch/ao/ns
-%dir %{python3_sitearch}/torch/ao/ns/fx
-%dir %{python3_sitearch}/torch/ao/ns/fx/__pycache__
-%dir %{python3_sitearch}/torch/ao/ns/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/activation_sparsifier
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/activation_sparsifier/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_scheduler
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_scheduler/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_sparsifier
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_sparsifier/lightning
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_sparsifier/lightning/callbacks
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_sparsifier/lightning/callbacks/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_sparsifier/lightning/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/data_sparsifier/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/pruner
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/pruner/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/_experimental/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/scheduler
-%dir %{python3_sitearch}/torch/ao/pruning/scheduler/__pycache__
-%dir %{python3_sitearch}/torch/ao/pruning/sparsifier
-%dir %{python3_sitearch}/torch/ao/pruning/sparsifier/__pycache__
-%dir %{python3_sitearch}/torch/ao/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization
-%dir %{python3_sitearch}/torch/ao/quantization/backend_config
-%dir %{python3_sitearch}/torch/ao/quantization/backend_config/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization/fx
-%dir %{python3_sitearch}/torch/ao/quantization/fx/_model_report
-%dir %{python3_sitearch}/torch/ao/quantization/fx/_model_report/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization/fx/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization/pt2e
-%dir %{python3_sitearch}/torch/ao/quantization/pt2e/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization/pt2e/representation
-%dir %{python3_sitearch}/torch/ao/quantization/pt2e/representation/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization/__pycache__
-%dir %{python3_sitearch}/torch/ao/quantization/quantizer
-%dir %{python3_sitearch}/torch/ao/quantization/quantizer/__pycache__
-%dir %{python3_sitearch}/torch/autograd
-%dir %{python3_sitearch}/torch/autograd/_functions
-%dir %{python3_sitearch}/torch/autograd/_functions/__pycache__
-%dir %{python3_sitearch}/torch/autograd/__pycache__
-%dir %{python3_sitearch}/torch/_awaits
-%dir %{python3_sitearch}/torch/_awaits/__pycache__
-%dir %{python3_sitearch}/torch/backends
-%dir %{python3_sitearch}/torch/backends/_coreml
-%dir %{python3_sitearch}/torch/backends/_coreml/__pycache__
-%dir %{python3_sitearch}/torch/backends/cpu
-%dir %{python3_sitearch}/torch/backends/cpu/__pycache__
-%dir %{python3_sitearch}/torch/backends/cuda
-%dir %{python3_sitearch}/torch/backends/cuda/__pycache__
-%dir %{python3_sitearch}/torch/backends/cudnn
-%dir %{python3_sitearch}/torch/backends/cudnn/__pycache__
-%dir %{python3_sitearch}/torch/backends/mkl
-%dir %{python3_sitearch}/torch/backends/mkldnn
-%dir %{python3_sitearch}/torch/backends/mkldnn/__pycache__
-%dir %{python3_sitearch}/torch/backends/mkl/__pycache__
-%dir %{python3_sitearch}/torch/backends/mps
-%dir %{python3_sitearch}/torch/backends/mps/__pycache__
-%dir %{python3_sitearch}/torch/backends/_nnapi
-%dir %{python3_sitearch}/torch/backends/_nnapi/__pycache__
-%dir %{python3_sitearch}/torch/backends/openmp
-%dir %{python3_sitearch}/torch/backends/openmp/__pycache__
-%dir %{python3_sitearch}/torch/backends/opt_einsum
-%dir %{python3_sitearch}/torch/backends/opt_einsum/__pycache__
-%dir %{python3_sitearch}/torch/backends/__pycache__
-%dir %{python3_sitearch}/torch/backends/quantized
-%dir %{python3_sitearch}/torch/backends/quantized/__pycache__
-%dir %{python3_sitearch}/torch/backends/xeon
-%dir %{python3_sitearch}/torch/backends/xeon/__pycache__
-%dir %{python3_sitearch}/torch/backends/xnnpack
-%dir %{python3_sitearch}/torch/backends/xnnpack/__pycache__
-%dir %{python3_sitearch}/torch/bin
-%dir %{python3_sitearch}/torch/_C
-%dir %{python3_sitearch}/torch/compiler
-%dir %{python3_sitearch}/torch/compiler/__pycache__
-%dir %{python3_sitearch}/torch/contrib
-%dir %{python3_sitearch}/torch/contrib/__pycache__
-%dir %{python3_sitearch}/torch/cpu
-%dir %{python3_sitearch}/torch/cpu/amp
-%dir %{python3_sitearch}/torch/cpu/amp/__pycache__
-%dir %{python3_sitearch}/torch/cpu/__pycache__
-%dir %{python3_sitearch}/torch/cuda
-%dir %{python3_sitearch}/torch/cuda/amp
-%dir %{python3_sitearch}/torch/cuda/amp/__pycache__
-%dir %{python3_sitearch}/torch/cuda/__pycache__
-%dir %{python3_sitearch}/torch/_custom_op
-%dir %{python3_sitearch}/torch/_custom_op/__pycache__
-%dir %{python3_sitearch}/torch/_decomp
-%dir %{python3_sitearch}/torch/_decomp/__pycache__
-%dir %{python3_sitearch}/torch/_dispatch
-%dir %{python3_sitearch}/torch/_dispatch/__pycache__
-%dir %{python3_sitearch}/torch/distributed
-%dir %{python3_sitearch}/torch/distributed/algorithms
-%dir %{python3_sitearch}/torch/distributed/algorithms/_checkpoint
-%dir %{python3_sitearch}/torch/distributed/algorithms/_checkpoint/__pycache__
-%dir %{python3_sitearch}/torch/distributed/algorithms/_comm_hooks
-%dir %{python3_sitearch}/torch/distributed/algorithms/_comm_hooks/__pycache__
-%dir %{python3_sitearch}/torch/distributed/algorithms/ddp_comm_hooks
-%dir %{python3_sitearch}/torch/distributed/algorithms/ddp_comm_hooks/__pycache__
-%dir %{python3_sitearch}/torch/distributed/algorithms/model_averaging
-%dir %{python3_sitearch}/torch/distributed/algorithms/model_averaging/__pycache__
-%dir %{python3_sitearch}/torch/distributed/algorithms/_optimizer_overlap
-%dir %{python3_sitearch}/torch/distributed/algorithms/_optimizer_overlap/__pycache__
-%dir %{python3_sitearch}/torch/distributed/algorithms/__pycache__
-%dir %{python3_sitearch}/torch/distributed/algorithms/_quantization
-%dir %{python3_sitearch}/torch/distributed/algorithms/_quantization/__pycache__
-%dir %{python3_sitearch}/torch/distributed/autograd
-%dir %{python3_sitearch}/torch/distributed/autograd/__pycache__
-%dir %{python3_sitearch}/torch/distributed/checkpoint
-%dir %{python3_sitearch}/torch/distributed/checkpoint/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_composable
-%dir %{python3_sitearch}/torch/distributed/_composable/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic
-%dir %{python3_sitearch}/torch/distributed/elastic/agent
-%dir %{python3_sitearch}/torch/distributed/elastic/agent/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/agent/server
-%dir %{python3_sitearch}/torch/distributed/elastic/agent/server/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/events
-%dir %{python3_sitearch}/torch/distributed/elastic/events/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/metrics
-%dir %{python3_sitearch}/torch/distributed/elastic/metrics/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/multiprocessing
-%dir %{python3_sitearch}/torch/distributed/elastic/multiprocessing/errors
-%dir %{python3_sitearch}/torch/distributed/elastic/multiprocessing/errors/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/multiprocessing/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/rendezvous
-%dir %{python3_sitearch}/torch/distributed/elastic/rendezvous/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/timer
-%dir %{python3_sitearch}/torch/distributed/elastic/timer/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/utils
-%dir %{python3_sitearch}/torch/distributed/elastic/utils/data
-%dir %{python3_sitearch}/torch/distributed/elastic/utils/data/__pycache__
-%dir %{python3_sitearch}/torch/distributed/elastic/utils/__pycache__
-%dir %{python3_sitearch}/torch/distributed/fsdp
-%dir %{python3_sitearch}/torch/distributed/fsdp/__pycache__
-%dir %{python3_sitearch}/torch/distributed/launcher
-%dir %{python3_sitearch}/torch/distributed/launcher/__pycache__
-%dir %{python3_sitearch}/torch/distributed/nn
-%dir %{python3_sitearch}/torch/distributed/nn/api
-%dir %{python3_sitearch}/torch/distributed/nn/api/__pycache__
-%dir %{python3_sitearch}/torch/distributed/nn/jit
-%dir %{python3_sitearch}/torch/distributed/nn/jit/__pycache__
-%dir %{python3_sitearch}/torch/distributed/nn/jit/templates
-%dir %{python3_sitearch}/torch/distributed/nn/jit/templates/__pycache__
-%dir %{python3_sitearch}/torch/distributed/nn/__pycache__
-%dir %{python3_sitearch}/torch/distributed/optim
-%dir %{python3_sitearch}/torch/distributed/optim/__pycache__
-%dir %{python3_sitearch}/torch/distributed/pipeline
-%dir %{python3_sitearch}/torch/distributed/pipeline/__pycache__
-%dir %{python3_sitearch}/torch/distributed/pipeline/sync
-%dir %{python3_sitearch}/torch/distributed/pipeline/sync/_balance
-%dir %{python3_sitearch}/torch/distributed/pipeline/sync/_balance/__pycache__
-%dir %{python3_sitearch}/torch/distributed/pipeline/sync/__pycache__
-%dir %{python3_sitearch}/torch/distributed/pipeline/sync/skip
-%dir %{python3_sitearch}/torch/distributed/pipeline/sync/skip/__pycache__
-%dir %{python3_sitearch}/torch/distributed/__pycache__
-%dir %{python3_sitearch}/torch/distributed/rpc
-%dir %{python3_sitearch}/torch/distributed/rpc/__pycache__
-%dir %{python3_sitearch}/torch/distributed/rpc/_testing
-%dir %{python3_sitearch}/torch/distributed/rpc/_testing/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard
-%dir %{python3_sitearch}/torch/distributed/_shard/checkpoint
-%dir %{python3_sitearch}/torch/distributed/_shard/checkpoint/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_sharded_tensor
-%dir %{python3_sitearch}/torch/distributed/_sharded_tensor/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_sharding_spec
-%dir %{python3_sitearch}/torch/distributed/_sharding_spec/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/sharded_optim
-%dir %{python3_sitearch}/torch/distributed/_shard/sharded_optim/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/sharded_tensor
-%dir %{python3_sitearch}/torch/distributed/_shard/sharded_tensor/_ops
-%dir %{python3_sitearch}/torch/distributed/_shard/sharded_tensor/_ops/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/sharded_tensor/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/sharding_plan
-%dir %{python3_sitearch}/torch/distributed/_shard/sharding_plan/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/sharding_spec
-%dir %{python3_sitearch}/torch/distributed/_shard/sharding_spec/chunk_sharding_spec_ops
-%dir %{python3_sitearch}/torch/distributed/_shard/sharding_spec/chunk_sharding_spec_ops/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_shard/sharding_spec/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_spmd
-%dir %{python3_sitearch}/torch/distributed/_spmd/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_tensor
-%dir %{python3_sitearch}/torch/distributed/tensor
-%dir %{python3_sitearch}/torch/distributed/_tensor/debug
-%dir %{python3_sitearch}/torch/distributed/_tensor/debug/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_tensor/ops
-%dir %{python3_sitearch}/torch/distributed/_tensor/ops/__pycache__
-%dir %{python3_sitearch}/torch/distributed/tensor/parallel
-%dir %{python3_sitearch}/torch/distributed/tensor/parallel/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_tensor/__pycache__
-%dir %{python3_sitearch}/torch/distributed/tensor/__pycache__
-%dir %{python3_sitearch}/torch/distributed/_tools
-%dir %{python3_sitearch}/torch/distributed/_tools/__pycache__
-%dir %{python3_sitearch}/torch/distributions
-%dir %{python3_sitearch}/torch/distributions/__pycache__
-%dir %{python3_sitearch}/torch/_dynamo
-%dir %{python3_sitearch}/torch/_dynamo/backends
-%dir %{python3_sitearch}/torch/_dynamo/backends/__pycache__
-%dir %{python3_sitearch}/torch/_dynamo/__pycache__
-%dir %{python3_sitearch}/torch/_dynamo/repro
-%dir %{python3_sitearch}/torch/_dynamo/repro/__pycache__
-%dir %{python3_sitearch}/torch/_dynamo/variables
-%dir %{python3_sitearch}/torch/_dynamo/variables/__pycache__
-%dir %{python3_sitearch}/torch/_export
-%dir %{python3_sitearch}/torch/export
-%dir %{python3_sitearch}/torch/_export/db
-%dir %{python3_sitearch}/torch/_export/db/examples
-%dir %{python3_sitearch}/torch/_export/db/examples/__pycache__
-%dir %{python3_sitearch}/torch/_export/db/__pycache__
-%dir %{python3_sitearch}/torch/_export/passes
-%dir %{python3_sitearch}/torch/_export/passes/__pycache__
-%dir %{python3_sitearch}/torch/_export/pass_infra
-%dir %{python3_sitearch}/torch/_export/pass_infra/__pycache__
-%dir %{python3_sitearch}/torch/_export/__pycache__
-%dir %{python3_sitearch}/torch/export/__pycache__
-%dir %{python3_sitearch}/torch/_export/serde
-%dir %{python3_sitearch}/torch/_export/serde/__pycache__
-%dir %{python3_sitearch}/torch/fft
-%dir %{python3_sitearch}/torch/fft/__pycache__
-%dir %{python3_sitearch}/torch/func
-%dir %{python3_sitearch}/torch/func/__pycache__
-%dir %{python3_sitearch}/torch/_functorch
-%dir %{python3_sitearch}/torch/_functorch/__pycache__
-%dir %{python3_sitearch}/torch/futures
-%dir %{python3_sitearch}/torch/futures/__pycache__
-%dir %{python3_sitearch}/torch/fx
-%dir %{python3_sitearch}/torch/fx/experimental
-%dir %{python3_sitearch}/torch/fx/experimental/migrate_gradual_types
-%dir %{python3_sitearch}/torch/fx/experimental/migrate_gradual_types/__pycache__
-%dir %{python3_sitearch}/torch/fx/experimental/__pycache__
-%dir %{python3_sitearch}/torch/fx/experimental/unification
-%dir %{python3_sitearch}/torch/fx/experimental/unification/multipledispatch
-%dir %{python3_sitearch}/torch/fx/experimental/unification/multipledispatch/__pycache__
-%dir %{python3_sitearch}/torch/fx/experimental/unification/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes
-%dir %{python3_sitearch}/torch/fx/passes/backends
-%dir %{python3_sitearch}/torch/fx/passes/backends/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes/dialect
-%dir %{python3_sitearch}/torch/fx/passes/dialect/common
-%dir %{python3_sitearch}/torch/fx/passes/dialect/common/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes/dialect/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes/infra
-%dir %{python3_sitearch}/torch/fx/passes/infra/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes/tests
-%dir %{python3_sitearch}/torch/fx/passes/tests/__pycache__
-%dir %{python3_sitearch}/torch/fx/passes/utils
-%dir %{python3_sitearch}/torch/fx/passes/utils/__pycache__
-%dir %{python3_sitearch}/torch/fx/__pycache__
-%dir %{python3_sitearch}/torch/_higher_order_ops
-%dir %{python3_sitearch}/torch/_higher_order_ops/__pycache__
-%dir %{python3_sitearch}/torch/include
-%dir %{python3_sitearch}/torch/include/ATen
-%dir %{python3_sitearch}/torch/include/ATen/core
-%dir %{python3_sitearch}/torch/include/ATen/core/boxing
-%dir %{python3_sitearch}/torch/include/ATen/core/boxing/impl
-%dir %{python3_sitearch}/torch/include/ATen/core/dispatch
-%dir %{python3_sitearch}/torch/include/ATen/core/op_registration
-%dir %{python3_sitearch}/torch/include/ATen/cpu
-%dir %{python3_sitearch}/torch/include/ATen/cpu/vec
-%dir %{python3_sitearch}/torch/include/ATen/cpu/vec/vec256
-%dir %{python3_sitearch}/torch/include/ATen/cpu/vec/vec256/vsx
-%dir %{python3_sitearch}/torch/include/ATen/cpu/vec/vec512
-%dir %{python3_sitearch}/torch/include/ATen/cuda
-%dir %{python3_sitearch}/torch/include/ATen/cuda/detail
-%dir %{python3_sitearch}/torch/include/ATen/cudnn
-%dir %{python3_sitearch}/torch/include/ATen/detail
-%dir %{python3_sitearch}/torch/include/ATen/functorch
-%dir %{python3_sitearch}/torch/include/ATen/hip
-%dir %{python3_sitearch}/torch/include/ATen/hip/impl
-%dir %{python3_sitearch}/torch/include/ATen/miopen
-%dir %{python3_sitearch}/torch/include/ATen/mps
-%dir %{python3_sitearch}/torch/include/ATen/native
-%dir %{python3_sitearch}/torch/include/ATen/native/cpu
-%dir %{python3_sitearch}/torch/include/ATen/native/cuda
-%dir %{python3_sitearch}/torch/include/ATen/native/mps
-%dir %{python3_sitearch}/torch/include/ATen/native/quantized
-%dir %{python3_sitearch}/torch/include/ATen/native/quantized/cpu
-%dir %{python3_sitearch}/torch/include/ATen/native/utils
-%dir %{python3_sitearch}/torch/include/ATen/ops
-%dir %{python3_sitearch}/torch/include/ATen/quantized
-%dir %{python3_sitearch}/torch/include/c10
-%dir %{python3_sitearch}/torch/include/c10/core
-%dir %{python3_sitearch}/torch/include/c10/core/impl
-%dir %{python3_sitearch}/torch/include/c10/core/impl/cow
-%dir %{python3_sitearch}/torch/include/c10/cuda
-%dir %{python3_sitearch}/torch/include/c10/cuda/impl
-%dir %{python3_sitearch}/torch/include/c10/macros
-%dir %{python3_sitearch}/torch/include/c10/util
-%dir %{python3_sitearch}/torch/include/caffe2
-%dir %{python3_sitearch}/torch/include/caffe2/serialize
-%dir %{python3_sitearch}/torch/include/torch
-%dir %{python3_sitearch}/torch/include/torch/csrc
-%dir %{python3_sitearch}/torch/include/torch/csrc/api
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/data
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/data/dataloader
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/data/datasets
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/data/detail
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/data/samplers
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/data/transforms
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/detail
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn/functional
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn/modules
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn/modules/container
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn/options
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn/parallel
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/nn/utils
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/optim
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/optim/schedulers
-%dir %{python3_sitearch}/torch/include/torch/csrc/api/include/torch/serialize
-%dir %{python3_sitearch}/torch/include/torch/csrc/autograd
-%dir %{python3_sitearch}/torch/include/torch/csrc/autograd/functions
-%dir %{python3_sitearch}/torch/include/torch/csrc/autograd/generated
-%dir %{python3_sitearch}/torch/include/torch/csrc/autograd/utils
-%dir %{python3_sitearch}/torch/include/torch/csrc/cuda
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed/autograd
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed/autograd/context
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed/autograd/functions
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed/autograd/rpc_messages
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed/c10d
-%dir %{python3_sitearch}/torch/include/torch/csrc/distributed/rpc
-%dir %{python3_sitearch}/torch/include/torch/csrc/dynamo
-%dir %{python3_sitearch}/torch/include/torch/csrc/inductor
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/api
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/backends
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/codegen
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/codegen/cuda
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/frontend
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/ir
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/mobile
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/passes
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/passes/quantization
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/passes/utils
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/python
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/runtime
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/serialization
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/tensorexpr
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/tensorexpr/operators
-%dir %{python3_sitearch}/torch/include/torch/csrc/jit/testing
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy/backend
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy/core
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy/core/internal_ops
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy/core/ops
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy/python
-%dir %{python3_sitearch}/torch/include/torch/csrc/lazy/ts_backend
-%dir %{python3_sitearch}/torch/include/torch/csrc/onnx
-%dir %{python3_sitearch}/torch/include/torch/csrc/profiler
-%dir %{python3_sitearch}/torch/include/torch/csrc/profiler/orchestration
-%dir %{python3_sitearch}/torch/include/torch/csrc/profiler/stubs
-%dir %{python3_sitearch}/torch/include/torch/csrc/tensor
-%dir %{python3_sitearch}/torch/include/torch/csrc/utils
-%dir %{python3_sitearch}/torch/_inductor
-%dir %{python3_sitearch}/torch/_inductor/codegen
-%dir %{python3_sitearch}/torch/_inductor/codegen/__pycache__
-%dir %{python3_sitearch}/torch/_inductor/fx_passes
-%dir %{python3_sitearch}/torch/_inductor/fx_passes/__pycache__
-%dir %{python3_sitearch}/torch/_inductor/kernel
-%dir %{python3_sitearch}/torch/_inductor/kernel/__pycache__
-%dir %{python3_sitearch}/torch/_inductor/__pycache__
-%dir %{python3_sitearch}/torch/jit
-%dir %{python3_sitearch}/torch/jit/mobile
-%dir %{python3_sitearch}/torch/jit/mobile/__pycache__
-%dir %{python3_sitearch}/torch/jit/_passes
-%dir %{python3_sitearch}/torch/jit/_passes/__pycache__
-%dir %{python3_sitearch}/torch/jit/__pycache__
-%dir %{python3_sitearch}/torch/_lazy
-%dir %{python3_sitearch}/torch/_lazy/__pycache__
-%dir %{python3_sitearch}/torch/lib
-%dir %{python3_sitearch}/torch/linalg
-%dir %{python3_sitearch}/torch/linalg/__pycache__
-%dir %{python3_sitearch}/torch/_logging
-%dir %{python3_sitearch}/torch/_logging/__pycache__
-%dir %{python3_sitearch}/torch/masked
-%dir %{python3_sitearch}/torch/masked/maskedtensor
-%dir %{python3_sitearch}/torch/masked/maskedtensor/__pycache__
-%dir %{python3_sitearch}/torch/masked/__pycache__
-%dir %{python3_sitearch}/torch/monitor
-%dir %{python3_sitearch}/torch/monitor/__pycache__
-%dir %{python3_sitearch}/torch/mps
-%dir %{python3_sitearch}/torch/mps/__pycache__
-%dir %{python3_sitearch}/torch/multiprocessing
-%dir %{python3_sitearch}/torch/multiprocessing/__pycache__
-%dir %{python3_sitearch}/torch/nested
-%dir %{python3_sitearch}/torch/nested/__pycache__
-%dir %{python3_sitearch}/torch/nn
-%dir %{python3_sitearch}/torch/nn/backends
-%dir %{python3_sitearch}/torch/nn/backends/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic
-%dir %{python3_sitearch}/torch/nn/intrinsic/modules
-%dir %{python3_sitearch}/torch/nn/intrinsic/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/qat
-%dir %{python3_sitearch}/torch/nn/intrinsic/qat/modules
-%dir %{python3_sitearch}/torch/nn/intrinsic/qat/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/qat/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/dynamic
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/dynamic/modules
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/dynamic/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/modules
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/intrinsic/quantized/__pycache__
-%dir %{python3_sitearch}/torch/nn/modules
-%dir %{python3_sitearch}/torch/nn/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/parallel
-%dir %{python3_sitearch}/torch/nn/parallel/__pycache__
-%dir %{python3_sitearch}/torch/nn/__pycache__
-%dir %{python3_sitearch}/torch/nn/qat
-%dir %{python3_sitearch}/torch/nn/qat/dynamic
-%dir %{python3_sitearch}/torch/nn/qat/dynamic/modules
-%dir %{python3_sitearch}/torch/nn/qat/dynamic/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/qat/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/nn/qat/modules
-%dir %{python3_sitearch}/torch/nn/qat/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/qat/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantizable
-%dir %{python3_sitearch}/torch/nn/quantizable/modules
-%dir %{python3_sitearch}/torch/nn/quantizable/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantizable/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantized
-%dir %{python3_sitearch}/torch/nn/quantized/dynamic
-%dir %{python3_sitearch}/torch/nn/quantized/dynamic/modules
-%dir %{python3_sitearch}/torch/nn/quantized/dynamic/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantized/dynamic/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantized/modules
-%dir %{python3_sitearch}/torch/nn/quantized/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantized/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantized/_reference
-%dir %{python3_sitearch}/torch/nn/quantized/_reference/modules
-%dir %{python3_sitearch}/torch/nn/quantized/_reference/modules/__pycache__
-%dir %{python3_sitearch}/torch/nn/quantized/_reference/__pycache__
-%dir %{python3_sitearch}/torch/nn/utils
-%dir %{python3_sitearch}/torch/nn/utils/_expanded_weights
-%dir %{python3_sitearch}/torch/nn/utils/_expanded_weights/__pycache__
-%dir %{python3_sitearch}/torch/nn/utils/__pycache__
-%dir %{python3_sitearch}/torch/_numpy
-%dir %{python3_sitearch}/torch/_numpy/__pycache__
-%dir %{python3_sitearch}/torch/_numpy/testing
-%dir %{python3_sitearch}/torch/_numpy/testing/__pycache__
-%dir %{python3_sitearch}/torch/onnx
-%dir %{python3_sitearch}/torch/onnx/_internal
-%dir %{python3_sitearch}/torch/onnx/_internal/diagnostics
-%dir %{python3_sitearch}/torch/onnx/_internal/diagnostics/infra
-%dir %{python3_sitearch}/torch/onnx/_internal/diagnostics/infra/__pycache__
-%dir %{python3_sitearch}/torch/onnx/_internal/diagnostics/infra/sarif
-%dir %{python3_sitearch}/torch/onnx/_internal/diagnostics/infra/sarif/__pycache__
-%dir %{python3_sitearch}/torch/onnx/_internal/diagnostics/__pycache__
-%dir %{python3_sitearch}/torch/onnx/_internal/fx
-%dir %{python3_sitearch}/torch/onnx/_internal/fx/analysis
-%dir %{python3_sitearch}/torch/onnx/_internal/fx/analysis/__pycache__
-%dir %{python3_sitearch}/torch/onnx/_internal/fx/passes
-%dir %{python3_sitearch}/torch/onnx/_internal/fx/passes/__pycache__
-%dir %{python3_sitearch}/torch/onnx/_internal/fx/__pycache__
-%dir %{python3_sitearch}/torch/onnx/_internal/__pycache__
-%dir %{python3_sitearch}/torch/onnx/__pycache__
-%dir %{python3_sitearch}/torch/optim
-%dir %{python3_sitearch}/torch/optim/_multi_tensor
-%dir %{python3_sitearch}/torch/optim/_multi_tensor/__pycache__
-%dir %{python3_sitearch}/torch/optim/__pycache__
-%dir %{python3_sitearch}/torch/package
-%dir %{python3_sitearch}/torch/package/analyze
-%dir %{python3_sitearch}/torch/package/analyze/__pycache__
-%dir %{python3_sitearch}/torch/package/__pycache__
-%dir %{python3_sitearch}/torch/_prims
-%dir %{python3_sitearch}/torch/_prims_common
-%dir %{python3_sitearch}/torch/_prims_common/__pycache__
-%dir %{python3_sitearch}/torch/_prims/__pycache__
-%dir %{python3_sitearch}/torch/profiler
-%dir %{python3_sitearch}/torch/profiler/__pycache__
-%dir %{python3_sitearch}/torch/__pycache__
-%dir %{python3_sitearch}/torch/quantization
-%dir %{python3_sitearch}/torch/quantization/fx
-%dir %{python3_sitearch}/torch/quantization/fx/__pycache__
-%dir %{python3_sitearch}/torch/quantization/__pycache__
-%dir %{python3_sitearch}/torch/_refs
-%dir %{python3_sitearch}/torch/_refs/linalg
-%dir %{python3_sitearch}/torch/_refs/linalg/__pycache__
-%dir %{python3_sitearch}/torch/_refs/nn
-%dir %{python3_sitearch}/torch/_refs/nn/functional
-%dir %{python3_sitearch}/torch/_refs/nn/functional/__pycache__
-%dir %{python3_sitearch}/torch/_refs/nn/__pycache__
-%dir %{python3_sitearch}/torch/_refs/__pycache__
-%dir %{python3_sitearch}/torch/_refs/special
-%dir %{python3_sitearch}/torch/_refs/special/__pycache__
-%dir %{python3_sitearch}/torch/share
-%dir %{python3_sitearch}/torch/share/cmake
-%dir %{python3_sitearch}/torch/share/cmake/ATen
-%dir %{python3_sitearch}/torch/share/cmake/Caffe2
-%dir %{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix
-%dir %{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/upstream
-%dir %{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA
-%dir %{python3_sitearch}/torch/share/cmake/Caffe2/public
-%dir %{python3_sitearch}/torch/share/cmake/Torch
-%dir %{python3_sitearch}/torch/signal
-%dir %{python3_sitearch}/torch/signal/__pycache__
-%dir %{python3_sitearch}/torch/signal/windows
-%dir %{python3_sitearch}/torch/signal/windows/__pycache__
-%dir %{python3_sitearch}/torch/sparse
-%dir %{python3_sitearch}/torch/sparse/__pycache__
-%dir %{python3_sitearch}/torch/special
-%dir %{python3_sitearch}/torch/special/__pycache__
-%dir %{python3_sitearch}/torch/_subclasses
-%dir %{python3_sitearch}/torch/_subclasses/__pycache__
-%dir %{python3_sitearch}/torch/testing
-%dir %{python3_sitearch}/torch/testing/_internal
-%dir %{python3_sitearch}/torch/testing/_internal/codegen
-%dir %{python3_sitearch}/torch/testing/_internal/codegen/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/data
-%dir %{python3_sitearch}/torch/testing/_internal/data/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/nn
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/nn/api
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/nn/api/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/nn/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/pipeline
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/pipeline/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/rpc
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/rpc/examples
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/rpc/examples/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/rpc/jit
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/rpc/jit/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/rpc/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/_shard
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/_shard/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/_shard/sharded_tensor
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/_shard/sharded_tensor/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/_tensor
-%dir %{python3_sitearch}/torch/testing/_internal/distributed/_tensor/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/generated
-%dir %{python3_sitearch}/torch/testing/_internal/generated/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/opinfo
-%dir %{python3_sitearch}/torch/testing/_internal/opinfo/definitions
-%dir %{python3_sitearch}/torch/testing/_internal/opinfo/definitions/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/opinfo/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/optests
-%dir %{python3_sitearch}/torch/testing/_internal/optests/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/__pycache__
-%dir %{python3_sitearch}/torch/testing/_internal/test_module
-%dir %{python3_sitearch}/torch/testing/_internal/test_module/__pycache__
-%dir %{python3_sitearch}/torch/testing/__pycache__
-%dir %{python3_sitearch}/torch/utils
-%dir %{python3_sitearch}/torch/utils/backcompat
-%dir %{python3_sitearch}/torch/utils/backcompat/__pycache__
-%dir %{python3_sitearch}/torch/utils/benchmark
-%dir %{python3_sitearch}/torch/utils/benchmark/examples
-%dir %{python3_sitearch}/torch/utils/benchmark/examples/__pycache__
-%dir %{python3_sitearch}/torch/utils/benchmark/op_fuzzers
-%dir %{python3_sitearch}/torch/utils/benchmark/op_fuzzers/__pycache__
-%dir %{python3_sitearch}/torch/utils/benchmark/__pycache__
-%dir %{python3_sitearch}/torch/utils/benchmark/utils
-%dir %{python3_sitearch}/torch/utils/benchmark/utils/__pycache__
-%dir %{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper
-%dir %{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper/__pycache__
-%dir %{python3_sitearch}/torch/utils/bottleneck
-%dir %{python3_sitearch}/torch/utils/bottleneck/__pycache__
-%dir %{python3_sitearch}/torch/utils/data
-%dir %{python3_sitearch}/torch/utils/data/datapipes
-%dir %{python3_sitearch}/torch/utils/data/datapipes/dataframe
-%dir %{python3_sitearch}/torch/utils/data/datapipes/dataframe/__pycache__
-%dir %{python3_sitearch}/torch/utils/data/datapipes/iter
-%dir %{python3_sitearch}/torch/utils/data/datapipes/iter/__pycache__
-%dir %{python3_sitearch}/torch/utils/data/datapipes/map
-%dir %{python3_sitearch}/torch/utils/data/datapipes/map/__pycache__
-%dir %{python3_sitearch}/torch/utils/data/datapipes/__pycache__
-%dir %{python3_sitearch}/torch/utils/data/datapipes/utils
-%dir %{python3_sitearch}/torch/utils/data/datapipes/utils/__pycache__
-%dir %{python3_sitearch}/torch/utils/data/__pycache__
-%dir %{python3_sitearch}/torch/utils/data/_utils
-%dir %{python3_sitearch}/torch/utils/data/_utils/__pycache__
-%dir %{python3_sitearch}/torch/utils/hipify
-%dir %{python3_sitearch}/torch/utils/hipify/__pycache__
-%dir %{python3_sitearch}/torch/utils/jit
-%dir %{python3_sitearch}/torch/utils/jit/__pycache__
-%dir %{python3_sitearch}/torch/utils/model_dump
-%dir %{python3_sitearch}/torch/utils/model_dump/__pycache__
-%dir %{python3_sitearch}/torch/utils/__pycache__
-%dir %{python3_sitearch}/torch/utils/_sympy
-%dir %{python3_sitearch}/torch/utils/_sympy/__pycache__
-%dir %{python3_sitearch}/torch/utils/tensorboard
-%dir %{python3_sitearch}/torch/utils/tensorboard/__pycache__
-%dir %{python3_sitearch}/torch/utils/viz
-%dir %{python3_sitearch}/torch/utils/viz/__pycache__
-
-%dir %{python3_sitearch}/torchgen
-%dir %{python3_sitearch}/torchgen/api
-%dir %{python3_sitearch}/torchgen/api/__pycache__
-%dir %{python3_sitearch}/torchgen/api/types
-%dir %{python3_sitearch}/torchgen/api/types/__pycache__
-%dir %{python3_sitearch}/torchgen/dest
-%dir %{python3_sitearch}/torchgen/dest/__pycache__
-%dir %{python3_sitearch}/torchgen/executorch
-%dir %{python3_sitearch}/torchgen/executorch/api
-%dir %{python3_sitearch}/torchgen/executorch/api/__pycache__
-%dir %{python3_sitearch}/torchgen/executorch/api/types
-%dir %{python3_sitearch}/torchgen/executorch/api/types/__pycache__
-%dir %{python3_sitearch}/torchgen/executorch/__pycache__
-%dir %{python3_sitearch}/torchgen/operator_versions
-%dir %{python3_sitearch}/torchgen/operator_versions/__pycache__
-%dir %{python3_sitearch}/torchgen/packaged
-%dir %{python3_sitearch}/torchgen/packaged/ATen
-%dir %{python3_sitearch}/torchgen/packaged/ATen/native
-%dir %{python3_sitearch}/torchgen/packaged/ATen/templates
-%dir %{python3_sitearch}/torchgen/packaged/autograd
-%dir %{python3_sitearch}/torchgen/packaged/autograd/__pycache__
-%dir %{python3_sitearch}/torchgen/packaged/autograd/templates
-%dir %{python3_sitearch}/torchgen/__pycache__
-%dir %{python3_sitearch}/torchgen/selective_build
-%dir %{python3_sitearch}/torchgen/selective_build/__pycache__
-%dir %{python3_sitearch}/torchgen/static_runtime
-%dir %{python3_sitearch}/torchgen/static_runtime/__pycache__
+# torch dirs
+%include %{SOURCE1}
 
 %license LICENSE
 %doc README.md
+
+# bins
 %{_bindir}/convert-caffe2-to-onnx
 %{_bindir}/convert-onnx-to-caffe2
 %{_bindir}/torchrun
-%{python3_sitearch}/functorch/
-%{python3_sitearch}/torch/*.py*
-%{python3_sitearch}/torch/__pycache__/
-%{python3_sitearch}/torch/_C/
-%{python3_sitearch}/torch/_awaits/
-%{python3_sitearch}/torch/_custom_op/
-%{python3_sitearch}/torch/_decomp/
-%{python3_sitearch}/torch/_dispatch/
-%{python3_sitearch}/torch/_dynamo/
-%{python3_sitearch}/torch/_export/
-%{python3_sitearch}/torch/_functorch/
-%{python3_sitearch}/torch/_higher_order_ops/
-%{python3_sitearch}/torch/_inductor/*.py
-%{python3_sitearch}/torch/_inductor/__pycache__/
-%{python3_sitearch}/torch/_inductor/codegen/*.py
-%{python3_sitearch}/torch/_inductor/codegen/__pycache__/
-%{python3_sitearch}/torch/_inductor/fx_passes/
-%{python3_sitearch}/torch/_inductor/kernel/
-%{python3_sitearch}/torch/_lazy/
-%{python3_sitearch}/torch/_logging/
-%{python3_sitearch}/torch/_numpy/
-%{python3_sitearch}/torch/_prims/
-%{python3_sitearch}/torch/_prims_common/
-%{python3_sitearch}/torch/_refs/
-%{python3_sitearch}/torch/_subclasses/
-%{python3_sitearch}/torch/amp/
-%{python3_sitearch}/torch/ao/
-%{python3_sitearch}/torch/autograd/
-%{python3_sitearch}/torch/backends/
-%{python3_sitearch}/torch/bin/
-%{python3_sitearch}/torch/compiler/
-%{python3_sitearch}/torch/contrib/
-%{python3_sitearch}/torch/cpu/
-%exclude %{python3_sitearch}/torch/cuda
-%{python3_sitearch}/torch/distributed/
-%{python3_sitearch}/torch/distributions/
-%{python3_sitearch}/torch/export/
-%{python3_sitearch}/torch/fft/
-%{python3_sitearch}/torch/func/
-%{python3_sitearch}/torch/futures/
-%{python3_sitearch}/torch/fx/
-%{python3_sitearch}/torch/jit/
-%{python3_sitearch}/torch/lib/
-%{python3_sitearch}/torch/linalg/
-%{python3_sitearch}/torch/masked/
-%{python3_sitearch}/torch/monitor/
-%{python3_sitearch}/torch/mps/
-%{python3_sitearch}/torch/multiprocessing/
-%{python3_sitearch}/torch/nested/
-%{python3_sitearch}/torch/nn/
-%{python3_sitearch}/torch/onnx/
-%{python3_sitearch}/torch/optim/
-%{python3_sitearch}/torch/package/
-%{python3_sitearch}/torch/profiler/
-%{python3_sitearch}/torch/quantization/
-%{python3_sitearch}/torch/share/
-%{python3_sitearch}/torch/signal/
-%{python3_sitearch}/torch/sparse/
-%{python3_sitearch}/torch/special/
-%{python3_sitearch}/torch/testing/
-%{python3_sitearch}/torch/utils/*.py
-%{python3_sitearch}/torch/utils/__pycache__/
-%{python3_sitearch}/torch/utils/_sympy/
-%{python3_sitearch}/torch/utils/backcompat/
-%{python3_sitearch}/torch/utils/benchmark/*.py
-%{python3_sitearch}/torch/utils/benchmark/__pycache__/
-%{python3_sitearch}/torch/utils/benchmark/examples/
-%{python3_sitearch}/torch/utils/benchmark/op_fuzzers/
-%{python3_sitearch}/torch/utils/benchmark/utils/*.py
-%{python3_sitearch}/torch/utils/benchmark/utils/__pycache__/
-%{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper/*.py
-%{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper/__pycache__/
-%{python3_sitearch}/torch/utils/bottleneck/
-%{python3_sitearch}/torch/utils/data/
-%{python3_sitearch}/torch/utils/hipify/
-%{python3_sitearch}/torch/utils/jit/
-%{python3_sitearch}/torch/utils/model_dump/
-%{python3_sitearch}/torch/utils/tensorboard/
-%{python3_sitearch}/torch/utils/viz/
-%{python3_sitearch}/torchgen/*.py
-%{python3_sitearch}/torchgen/__pycache__
-%{python3_sitearch}/torchgen/api/
-%{python3_sitearch}/torchgen/dest/
-%{python3_sitearch}/torchgen/executorch/
-%{python3_sitearch}/torchgen/operator_versions/
-%{python3_sitearch}/torchgen/packaged/ATen/native/
-%{python3_sitearch}/torchgen/packaged/autograd/*.py
-%{python3_sitearch}/torchgen/packaged/autograd/*.yaml
-%{python3_sitearch}/torchgen/packaged/autograd/*.md
-%exclude %{python3_sitearch}/torchgen/packaged/autograd/*.bazel
-%exclude %{python3_sitearch}/torchgen/packaged/autograd/*.bzl
-%{python3_sitearch}/torchgen/packaged/autograd/__pycache__/
-%{python3_sitearch}/torchgen/selective_build/
-%{python3_sitearch}/torchgen/static_runtime/
+%{python3_sitearch}/torch/bin/torch_shm_manager
 
+# libs
+%{python3_sitearch}/functorch/_C.cpython*.so
+%{python3_sitearch}/torch/_C.cpython*.so
+%{python3_sitearch}/torch/lib/libc10.so.*
+%{python3_sitearch}/torch/lib/libshm.so.*
+%{python3_sitearch}/torch/lib/libtorch.so.*
+%{python3_sitearch}/torch/lib/libtorch_cpu.so.*
+%{python3_sitearch}/torch/lib/libtorch_global_deps.so.*
+%{python3_sitearch}/torch/lib/libtorch_python.so.*
+
+# python code
+%include %{SOURCE3}
+
+# misc
+%{python3_sitearch}/torch/utils/model_dump/{*.js,*.mjs,*.html}
+%{python3_sitearch}/torchgen/packaged/ATen/native/*.yaml
+%{python3_sitearch}/torchgen/packaged/autograd/{*.md,*.yaml}
+
+# egg
 %{python3_sitearch}/torch*.egg-info/
 
+# excludes
+# bazel build cruft
+%exclude %{python3_sitearch}/torchgen/packaged/autograd/{BUILD.bazel,build.bzl}
 
+#
+# devel package
+#
 %files -n python3-%{pypi_name}-devel
 
-%dir %{python3_sitearch}/torch
-%dir %{python3_sitearch}/torch/include
-%dir %{python3_sitearch}/torch/include/ATen
-%dir %{python3_sitearch}/torch/include/ATen/core
-%dir %{python3_sitearch}/torch/include/ATen/cpu
-%dir %{python3_sitearch}/torch/include/ATen/detail
-%dir %{python3_sitearch}/torch/include/ATen/functorch
-%dir %{python3_sitearch}/torch/include/ATen/hip
-%dir %{python3_sitearch}/torch/include/ATen/miopen
-%dir %{python3_sitearch}/torch/include/ATen/mps
-%dir %{python3_sitearch}/torch/include/ATen/native
-%dir %{python3_sitearch}/torch/include/ATen/ops
-%dir %{python3_sitearch}/torch/include/ATen/quantized
-%dir %{python3_sitearch}/torch/include/c10
-%dir %{python3_sitearch}/torch/include/caffe2
-%dir %{python3_sitearch}/torch/include/torch
-%dir %{python3_sitearch}/torch/_inductor
-%dir %{python3_sitearch}/torch/_inductor/codegen
-%dir %{python3_sitearch}/torch/utils
-%dir %{python3_sitearch}/torch/utils/benchmark
-%dir %{python3_sitearch}/torch/utils/benchmark/utils
-%dir %{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper
-%dir %{python3_sitearch}/torchgen
-%dir %{python3_sitearch}/torchgen/packaged
-%dir %{python3_sitearch}/torchgen/packaged/ATen
-%dir %{python3_sitearch}/torchgen/packaged/ATen/templates
-%dir %{python3_sitearch}/torchgen/packaged/autograd
-%dir %{python3_sitearch}/torchgen/packaged/autograd/templates
+# devel libs
+%{python3_sitearch}/torch/lib/libc10.so
+%{python3_sitearch}/torch/lib/libshm.so
+%{python3_sitearch}/torch/lib/libtorch.so
+%{python3_sitearch}/torch/lib/libtorch_cpu.so
+%{python3_sitearch}/torch/lib/libtorch_global_deps.so
+%{python3_sitearch}/torch/lib/libtorch_python.so
 
-%{python3_sitearch}/torch/include/*.h
-%{python3_sitearch}/torch/include/ATen/*.h
-%{python3_sitearch}/torch/include/ATen/core/
-%{python3_sitearch}/torch/include/ATen/cpu/
-%exclude %{python3_sitearch}/torch/include/ATen/cuda/
-%exclude %{python3_sitearch}/torch/include/ATen/cudnn/
-%{python3_sitearch}/torch/include/ATen/detail/
-%{python3_sitearch}/torch/include/ATen/functorch/
-%{python3_sitearch}/torch/include/ATen/hip/
-%{python3_sitearch}/torch/include/ATen/miopen/
-%{python3_sitearch}/torch/include/ATen/mps/
-%{python3_sitearch}/torch/include/ATen/native/
-%{python3_sitearch}/torch/include/ATen/ops/
-%{python3_sitearch}/torch/include/ATen/quantized/
-%{python3_sitearch}/torch/include/c10/
-%{python3_sitearch}/torch/include/caffe2/
-%{python3_sitearch}/torch/include/torch/
-%{python3_sitearch}/torch/_inductor/codegen/*.cpp
-%{python3_sitearch}/torch/_inductor/codegen/*.h
-%{python3_sitearch}/torch/utils/benchmark/utils/*.cpp
-%{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper/*.cpp
-%{python3_sitearch}/torch/utils/benchmark/utils/valgrind_wrapper/*.h
-%{python3_sitearch}/torchgen/packaged/ATen/templates/
-%{python3_sitearch}/torchgen/packaged/autograd/templates/
+# devel headers and a bit of src
+%include %{SOURCE2}
 
+# devel cmake
+%{python3_sitearch}/torch/share/cmake/{ATen,Caffe2,Torch}/*.cmake
+%{python3_sitearch}/torch/share/cmake/Caffe2/public/*.cmake
+%{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/*.cmake
+%{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/*.cmake
+%{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA/*.cmake
+%{python3_sitearch}/torch/share/cmake/Caffe2/public/*.cmake
+
+# devel misc
+%{python3_sitearch}/torchgen/packaged/ATen/templates/RegisterDispatchDefinitions.ini
+%{python3_sitearch}/torchgen/packaged/autograd/templates/annotated_fn_args.py.in
+
+#
 # License Details
 # Main license BSD 3-Clause
 #
