@@ -38,7 +38,9 @@ Version:        2.1.0
 Release:        7%{?dist}
 Summary:        An AI/ML python package
 # See below for details
-License:        BSD-3-Clause AND BSD-2-Clause AND BSD-0-Clause AND Apache-2.0 AND MIT AND BSL-1.0 AND GPL-3.0-or-later AND Khronos AND Zlib
+# auto reviewer not happy with : BSD-0-Clause AND Khronos
+# Neither are listed here https://spdx.org/licenses/
+License:        BSD-3-Clause AND BSD-2-Clause AND Apache-2.0 AND MIT AND BSL-1.0 AND GPL-3.0-or-later AND Zlib
 
 URL:            https://pytorch.org/
 %if %{with gitcommit}
@@ -310,7 +312,6 @@ done
 %{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/*.cmake
 %{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/*.cmake
 %{python3_sitearch}/torch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA/*.cmake
-%{python3_sitearch}/torch/share/cmake/Caffe2/public/*.cmake
 
 # devel misc
 %{python3_sitearch}/torchgen/packaged/ATen/templates/RegisterDispatchDefinitions.ini
