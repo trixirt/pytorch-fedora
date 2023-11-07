@@ -4,14 +4,6 @@
 # Where the src comes from
 %global forgeurl https://github.com/pytorch/pytorch
 
-# To check between pyproject_ and py3_ building
-# current pyproject problem with mock
-# + /usr/bin/python3 -Bs /usr/lib/rpm/redhat/pyproject_wheel.py /builddir/build/BUILD/pytorch-v2.1.0/pyproject-wheeldir
-# /usr/bin/python3: No module named pip
-# Adding pip to build requires does not fix
-#
-# See BZ 2244862
-
 # So pre releases can be tried
 %bcond_with gitcommit
 %if %{with gitcommit}
@@ -32,6 +24,9 @@
 #
 # See BZ 2243823
 %bcond_without static_blas
+
+# debuginfo package does not get built
+%global debug_package %{nil}
 
 Name:           python-%{pypi_name}
 Version:        2.1.0
@@ -228,6 +223,14 @@ export USE_SYSTEM_LIBS=ON
 export USE_TENSORPIPE=OFF
 export USE_XNNPACK=ON
 
+# Why we are using py3_ vs pyproject_
+#
+# current pyproject problem with mock
+# + /usr/bin/python3 -Bs /usr/lib/rpm/redhat/pyproject_wheel.py /builddir/build/BUILD/pytorch-v2.1.0/pyproject-wheeldir
+# /usr/bin/python3: No module named pip
+# Adding pip to build requires does not fix
+#
+# See BZ 2244862
 %py3_build
 
 %install
@@ -236,9 +239,11 @@ export USE_XNNPACK=ON
 # empty files
 rm %{buildroot}%{python3_sitearch}/torch/py.typed
 rm %{buildroot}%{python3_sitearch}/torch/ao/quantization/backend_config/observation_type.py
+rm %{buildroot}%{python3_sitearch}/torch/ao/quantization/backend_config/__pycache__/observation_type.*.pyc
 rm %{buildroot}%{python3_sitearch}/torch/cuda/error.py
 rm %{buildroot}%{python3_sitearch}/torch/cuda/__pycache__/error.*.pyc
 rm %{buildroot}%{python3_sitearch}/torch/include/ATen/cudnn/Exceptions.h
+
 # exec permission
 for f in `find %{buildroot}%{python3_sitearch} -name '*.py'`; do
     if [ ! -x $f ]; then
@@ -248,6 +253,33 @@ done
 
 # shebangs
 %py3_shebang_fix %{buildroot}%{python3_sitearch}
+
+# Remove copies of the *.so's
+#
+# *.so should be symlinks, not copies
+# there is a copy of *.so.x.y.z to *.so and *.so.x.y
+# remove the copies and do the link
+#
+# And they need to be stripped
+%global lib_list c10 shm torch torch_cpu torch_global_deps torch_python
+{
+    cd %{buildroot}%{python3_sitearch}/torch/lib
+    for l in %{lib_list}
+    do
+	long_name=lib${l}.so.%{version}
+	short_name=${long_name%.*}
+	devel_name=lib${l}.so
+	rm ${short_name}
+	rm ${devel_name}
+	ln -s ${long_name} ${short_name}
+	ln -s ${long_name} ${devel_name}
+	strip ${long_name}
+    done
+}
+
+#
+# Another bin that needs to be stripped
+strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 
 #
 # Main package
