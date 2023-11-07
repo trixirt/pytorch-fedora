@@ -266,19 +266,21 @@ done
     cd %{buildroot}%{python3_sitearch}/torch/lib
     for l in %{lib_list}
     do
-	long_name=lib${l}.so.%{version}
-	short_name=${long_name%.*}
-	devel_name=lib${l}.so
-	rm ${short_name}
-	rm ${devel_name}
-	ln -s ${long_name} ${short_name}
-	ln -s ${long_name} ${devel_name}
-	strip ${long_name}
+        long_name=lib${l}.so.%{version}
+        short_name=${long_name%.*}
+        devel_name=lib${l}.so
+        rm ${short_name}
+        rm ${devel_name}
+        ln -s ${long_name} ${short_name}
+        ln -s ${long_name} ${devel_name}
+        strip ${long_name}
     done
 }
 
 #
-# Another bin that needs to be stripped
+# Another bins that need to be stripped
+strip %{buildroot}%{python3_sitearch}/functorch/_C.cpython*.so
+strip %{buildroot}%{python3_sitearch}/torch/_C.cpython*.so
 strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 
 #
