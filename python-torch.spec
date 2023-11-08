@@ -152,7 +152,7 @@ and Cython to extend PyTorch when needed.
 
 %package -n python3-%{pypi_name}-devel
 Summary:        Libraries and headers for %{name}
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       python3-%{pypi_name}%{?_isa} = %{version}-%{release}
 
 %description -n python3-%{pypi_name}-devel
 %{summary}
