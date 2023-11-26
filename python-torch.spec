@@ -25,17 +25,16 @@
 # See BZ 2243823
 %bcond_without static_blas
 
-# debuginfo package does not get built
-%global debug_package %{nil}
+# For -test subpackage
+# suitable only for local testing
+%bcond_with test
 
 Name:           python-%{pypi_name}
 Version:        2.1.0
-Release:        7%{?dist}
-Summary:        An AI/ML python package
+Release:        9%{?dist}
+Summary:        PyTorch AI/ML framework
 # See below for details
-# auto reviewer not happy with : BSD-0-Clause AND Khronos
-# Neither are listed here https://spdx.org/licenses/
-License:        BSD-3-Clause AND BSD-2-Clause AND Apache-2.0 AND MIT AND BSL-1.0 AND GPL-3.0-or-later AND Zlib
+License:        BSD-3-Clause AND BSD-2-Clause AND 0BSD AND Apache-2.0 AND MIT AND BSL-1.0 AND GPL-3.0-or-later AND Zlib
 
 URL:            https://pytorch.org/
 %if %{with gitcommit}
@@ -43,9 +42,6 @@ Source0:        %{forgeurl}/archive/%{commit0}/pytorch-%{shortcommit0}.tar.gz
 Source1:        pyproject.toml
 %else
 Source0:        %{forgeurl}/releases/download/v%{version}/pytorch-v%{version}.tar.gz
-Source1:        pt_dirs.txt
-Source2:        pt_devel_headers.txt
-Source3:        pt_python.txt
 %endif
 
 # Misc cmake changes that would be difficult to upstream
@@ -67,6 +63,12 @@ Patch4:         0005-disable-submodule-search.patch
 Patch5:         0001-torch-unresolved-syms-need-gfortran.patch
 # Fedora requires versioned so's
 Patch6:         0001-pytorch-use-SO-version-by-default.patch
+# libtorch_python.so: undefined symbols: Py*
+Patch7:         0001-python-torch-link-with-python.patch
+# E: unused-direct-shlib-dependency libshm.so.2.1.0 libtorch.so.2.1
+Patch8:         0001-python-torch-remove-ubuntu-specific-linking.patch
+# Tries to use git and is confused by tarball
+Patch9:         0001-torch-sane-version.patch
 
 # Limit to these because they are well behaved with clang
 ExclusiveArch:  x86_64 aarch64
@@ -141,6 +143,7 @@ Requires:       python3dist(networkx)
 Requires:       python3dist(setuptools)
 Requires:       python3dist(sympy)
 Requires:       python3dist(typing-extensions)
+
 %description -n python3-%{pypi_name}
 PyTorch is a Python package that provides two high-level features:
 
@@ -180,6 +183,7 @@ mv third_party/miniz-2.1.0 .
 #
 # setup.py depends on this script
 mv third_party/build_bundled.py .
+
 # Remove everything
 rm -rf third_party/*
 # Put stuff back
@@ -194,6 +198,16 @@ mkdir third_party/pocketfft
 mkdir third_party/valgrind-headers
 cp %{_includedir}/valgrind/* third_party/valgrind-headers
 
+# Remove unneeded OpenCL files that confuse the lincense scanner
+rm caffe2/contrib/opencl/OpenCL/cl.hpp
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/cl.h
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/cl.hpp
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/cl_ext.h
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/cl_gl.h
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/cl_gl_ext.h
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/cl_platform.h
+rm caffe2/mobile/contrib/libopencl-stub/include/CL/opencl.h
+
 %endif
 
 %build
@@ -201,10 +215,14 @@ cp %{_includedir}/valgrind/* third_party/valgrind-headers
 # For debugging setup.py
 # export SETUPTOOLS_SCM_DEBUG=1
 
-export CMAKE_FIND_PACKAGE_PREFER_CONFIG=ON
+export PYTORCH_BUILD_VERSION=0
+export PYTORCH_BUILD_NUMBER=0
+       
 export BUILD_CUSTOM_PROTOBUF=OFF
 export BUILD_SHARED_LIBS=ON
 export BUILD_TEST=OFF
+export CMAKE_BUILD_TYPE=RelWithDebInfo
+export CMAKE_FIND_PACKAGE_PREFER_CONFIG=ON
 export CAFFE2_LINK_LOCAL_PROTOBUF=OFF
 export USE_CUDA=OFF
 export USE_DISTRIBUTED=OFF
@@ -260,7 +278,6 @@ done
 # there is a copy of *.so.x.y.z to *.so and *.so.x.y
 # remove the copies and do the link
 #
-# And they need to be stripped
 %global lib_list c10 shm torch torch_cpu torch_global_deps torch_python
 {
     cd %{buildroot}%{python3_sitearch}/torch/lib
@@ -273,22 +290,31 @@ done
         rm ${devel_name}
         ln -s ${long_name} ${short_name}
         ln -s ${long_name} ${devel_name}
-        strip ${long_name}
     done
+    cd -
 }
 
-#
-# Another bins that need to be stripped
-strip %{buildroot}%{python3_sitearch}/functorch/_C.cpython*.so
-strip %{buildroot}%{python3_sitearch}/torch/_C.cpython*.so
-strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
+# Programatically create the list of dirs
+echo "s|%{buildroot}%{python3_sitearch}|%%dir %%{python3_sitearch}|g" > br.sed
+find %{buildroot}%{python3_sitearch} -mindepth 1 -type d  > dirs.files
+sed -i -f br.sed dirs.files 
+cat dirs.files > main.files
+
+# Similar for the python files
+find %{buildroot}%{python3_sitearch} -type f -name "*.py" -o -name "*.pyc" -o -name "*.pyi"  > py.files
+echo "s|%{buildroot}%{python3_sitearch}|%%{python3_sitearch}|g" > br.sed
+sed -i -f br.sed py.files
+cat py.files >> main.files
+
+# devel files, headers and such
+find %{buildroot}%{python3_sitearch} -type f -name "*.h" -o -name "*.hpp" -o -name "*.cuh" -o -name "*.cpp" -o -name "*.cu" > devel.files
+sed -i -f br.sed devel.files
 
 #
 # Main package
-%files -n python3-%{pypi_name}
+##% dir % {python3_sitearch}/torch*.egg-info
 
-# torch dirs
-%include %{SOURCE1}
+%files -n python3-%{pypi_name} -f main.files
 
 %license LICENSE
 %doc README.md
@@ -309,16 +335,13 @@ strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 %{python3_sitearch}/torch/lib/libtorch_global_deps.so.*
 %{python3_sitearch}/torch/lib/libtorch_python.so.*
 
-# python code
-%include %{SOURCE3}
-
 # misc
 %{python3_sitearch}/torch/utils/model_dump/{*.js,*.mjs,*.html}
 %{python3_sitearch}/torchgen/packaged/ATen/native/*.yaml
 %{python3_sitearch}/torchgen/packaged/autograd/{*.md,*.yaml}
 
 # egg
-%{python3_sitearch}/torch*.egg-info/
+%{python3_sitearch}/torch*.egg-info/*
 
 # excludes
 # bazel build cruft
@@ -327,7 +350,7 @@ strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 #
 # devel package
 #
-%files -n python3-%{pypi_name}-devel
+%files -n python3-%{pypi_name}-devel -f devel.files
 
 # devel libs
 %{python3_sitearch}/torch/lib/libc10.so
@@ -336,9 +359,6 @@ strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 %{python3_sitearch}/torch/lib/libtorch_cpu.so
 %{python3_sitearch}/torch/lib/libtorch_global_deps.so
 %{python3_sitearch}/torch/lib/libtorch_python.so
-
-# devel headers and a bit of src
-%include %{SOURCE2}
 
 # devel cmake
 %{python3_sitearch}/torch/share/cmake/{ATen,Caffe2,Torch}/*.cmake
@@ -663,6 +683,9 @@ strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 # c10/util/reverse_iterator.h
 #
 # Khronos
+# These files are for OpenCL, an unused option
+# Replace them later, as-needed with the opencl-headers.rpm
+#
 # caffe2/contrib/opencl/OpenCL/cl.hpp
 # caffe2/mobile/contrib/libopencl-stub/include/CL/cl.h
 # caffe2/mobile/contrib/libopencl-stub/include/CL/cl.hpp
@@ -699,6 +722,12 @@ strip %{buildroot}%{python3_sitearch}/torch/bin/torch_shm_manager
 # aten/src/ATen/native/cpu/avx_mathfun.h
 
 %changelog
+* Fri Nov 24 2023 Tom Rix <trix@redhat.com> - 2.1.0-9
+- Enable debug build
+
+* Wed Nov 15 2023 Tom Rix <trix@redhat.com> - 2.1.0-8
+- Address review comments
+
 * Thu Nov 2 2023 Tom Rix <trix@redhat.com> - 2.1.0-7
 - Address review comments
 - remove pyproject option
