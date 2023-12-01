@@ -12,26 +12,16 @@
 %global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 %endif
 
-# Check if static blas,lapack are really needed
-# And this is the error :
-# CMake Error at /usr/lib64/cmake/lapack-3.11.0/lapack-targets.cmake:103 (message):
-#  The imported target "blas" references the file
-#
-#     "/usr/lib64/libblas.a"
-#
-#  but this file does not exist.  Possible reasons include:
-# ...
-#
-# See BZ 2243823
-%bcond_without static_blas
-
 # For -test subpackage
 # suitable only for local testing
+# Install and do something like
+#   export LD_LIBRARY_PATH=/usr/lib64/python3.12/site-packages/torch/lib
+#   /usr/lib64/python3.12/site-packages/torch/bin/test_api, test_lazy
 %bcond_with test
 
 Name:           python-%{pypi_name}
 Version:        2.1.0
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        PyTorch AI/ML framework
 # See below for details
 License:        BSD-3-Clause AND BSD-2-Clause AND 0BSD AND Apache-2.0 AND MIT AND BSL-1.0 AND GPL-3.0-or-later AND Zlib
@@ -58,34 +48,32 @@ Patch2:         0003-Stub-in-kineto-ActivityType.patch
 Patch3:         0004-torch-python-3.12-changes.patch
 # Short circuit looking for things that can not be downloade by mock
 Patch4:         0005-disable-submodule-search.patch
-# A Fedora libblas.a problem of undefined symbol
-# libtorch_cpu.so: undefined symbol: _gfortran_stop_string
-Patch5:         0001-torch-unresolved-syms-need-gfortran.patch
 # Fedora requires versioned so's
-Patch6:         0001-pytorch-use-SO-version-by-default.patch
+Patch5:         0001-pytorch-use-SO-version-by-default.patch
 # libtorch_python.so: undefined symbols: Py*
-Patch7:         0001-python-torch-link-with-python.patch
+Patch6:         0001-python-torch-link-with-python.patch
 # E: unused-direct-shlib-dependency libshm.so.2.1.0 libtorch.so.2.1
-Patch8:         0001-python-torch-remove-ubuntu-specific-linking.patch
+# turn on as-needed globally
+Patch7:         0001-python-torch-remove-ubuntu-specific-linking.patch
 # Tries to use git and is confused by tarball
-Patch9:         0001-torch-sane-version.patch
+Patch8:         0001-torch-sane-version.patch
+# libtorch is a wrapper so turn off as-needed locally
+# resolves this rpmlint
+# E: shared-library-without-dependency-information libtorch.so.2.1.0
+# causes these
+# E: unused-direct-shlib-dependency libtorch.so.2.1.0 libtorch_cpu.so.2.1
+# etc.
+# As a wrapper library, this should be the expected behavior.
+Patch9:         0001-disable-as-needed-for-libtorch.patch
 
 # Limit to these because they are well behaved with clang
 ExclusiveArch:  x86_64 aarch64
 %global toolchain clang
 
-%if 0%{?fedora}
-%if %{with static_blas}
-BuildRequires:  blas-static
-%else
-BuildRequires:  blas-devel
-%endif
-%else
-BuildRequires:  openblas-static
-%endif
 BuildRequires:  clang-devel
 BuildRequires:  cmake
 BuildRequires:  cpuinfo-devel
+BuildRequires:  eigen3-devel
 BuildRequires:  fmt-devel
 BuildRequires:  flatbuffers-devel
 BuildRequires:  FP16-devel
@@ -93,13 +81,9 @@ BuildRequires:  fxdiv-devel
 BuildRequires:  gcc-c++
 BuildRequires:  gcc-gfortran
 BuildRequires:  gloo-devel
-%if %{with static_blas}
-BuildRequires:  lapack-static
-%else
-BuildRequires:  lapack-devel
-%endif
 BuildRequires:  ninja-build
 BuildRequires:  onnx-devel
+BuildRequires:  openblas-devel
 BuildRequires:  pocketfft-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  pthreadpool-devel
@@ -136,14 +120,6 @@ and Cython to extend PyTorch when needed.
 %package -n     python3-%{pypi_name}
 Summary:        %{summary}
 
-Requires:       python3dist(filelock)
-Requires:       python3dist(fsspec)
-Requires:       python3dist(jinja2)
-Requires:       python3dist(networkx)
-Requires:       python3dist(setuptools)
-Requires:       python3dist(sympy)
-Requires:       python3dist(typing-extensions)
-
 %description -n python3-%{pypi_name}
 PyTorch is a Python package that provides two high-level features:
 
@@ -159,6 +135,16 @@ Requires:       python3-%{pypi_name}%{?_isa} = %{version}-%{release}
 
 %description -n python3-%{pypi_name}-devel
 %{summary}
+
+%if %{with test}
+%package -n python3-%{pypi_name}-test
+Summary:        Tests for %{name}
+Requires:       python3-%{pypi_name}%{?_isa} = %{version}-%{release}
+
+%description -n python3-%{pypi_name}-test
+%{summary}
+%endif
+
 
 %prep
 %if %{with gitcommit}
@@ -184,12 +170,18 @@ mv third_party/miniz-2.1.0 .
 # setup.py depends on this script
 mv third_party/build_bundled.py .
 
+%if %{with test}
+mv third_party/googletest .
+%endif
+
 # Remove everything
 rm -rf third_party/*
 # Put stuff back
 mv build_bundled.py third_party
 mv miniz-2.1.0 third_party
-
+%if %{with test}
+mv googletest third_party
+%endif
 #
 # Fake out pocketfft, and system header will be used
 mkdir third_party/pocketfft
@@ -215,18 +207,28 @@ rm caffe2/mobile/contrib/libopencl-stub/include/CL/opencl.h
 # For debugging setup.py
 # export SETUPTOOLS_SCM_DEBUG=1
 
-export PYTORCH_BUILD_VERSION=0
-export PYTORCH_BUILD_NUMBER=0
-       
+# For verbose cmake output
+# export VERBOSE=ON
+# For verbose linking
+# export CMAKE_SHARED_LINKER_FLAGS=-Wl,--verbose
+
+# Manually set this hardening flag
+export CMAKE_EXE_LINKER_FLAGS=-pie
+
 export BUILD_CUSTOM_PROTOBUF=OFF
 export BUILD_SHARED_LIBS=ON
+%if %{with test}
+export BUILD_TEST=ON
+%else
 export BUILD_TEST=OFF
+%endif
 export CMAKE_BUILD_TYPE=RelWithDebInfo
 export CMAKE_FIND_PACKAGE_PREFER_CONFIG=ON
 export CAFFE2_LINK_LOCAL_PROTOBUF=OFF
 export USE_CUDA=OFF
 export USE_DISTRIBUTED=OFF
 export USE_FBGEMM=OFF
+export USE_GOLD_LINKER=OFF
 export USE_ITT=OFF
 export USE_KINETO=OFF
 export USE_LITE_INTERPRETER_PROFILER=OFF
@@ -370,6 +372,28 @@ sed -i -f br.sed devel.files
 # devel misc
 %{python3_sitearch}/torchgen/packaged/ATen/templates/RegisterDispatchDefinitions.ini
 %{python3_sitearch}/torchgen/packaged/autograd/templates/annotated_fn_args.py.in
+
+%if %{with test}
+%files -n python3-%{pypi_name}-test
+
+# test bins
+%{python3_sitearch}/torch/bin/test_api
+%{python3_sitearch}/torch/bin/test_edge_op_registration
+%{python3_sitearch}/torch/bin/test_jit
+%{python3_sitearch}/torch/bin/test_lazy
+%{python3_sitearch}/torch/bin/test_tensorexpr
+%{python3_sitearch}/torch/bin/tutorial_tensorexpr
+
+# test libs
+# Unversioned - not ment for release
+%{python3_sitearch}/torch/lib/libbackend_with_compiler.so
+%{python3_sitearch}/torch/lib/libjitbackend_test.so
+%{python3_sitearch}/torch/lib/libtorchbind_test.so
+   
+# tests
+%{python3_sitearch}/torch/test/*
+
+%endif
 
 #
 # License Details
@@ -722,8 +746,18 @@ sed -i -f br.sed devel.files
 # aten/src/ATen/native/cpu/avx_mathfun.h
 
 %changelog
+* Fri Dec 1 2023 Tom Rix <trix@redhat.com> - 2.1.0-10
+- Disable gold linker
+- Remove python requires
+- Change to openblas, remove -lgfortran fixes
+- Manually add -pie to linking options
+
 * Fri Nov 24 2023 Tom Rix <trix@redhat.com> - 2.1.0-9
 - Enable debug build
+- Remove Khronos licensed files from source
+- Use 0BSD license identifier
+- Generate lists directories, python and header files
+- Add a -test subpackage
 
 * Wed Nov 15 2023 Tom Rix <trix@redhat.com> - 2.1.0-8
 - Address review comments
